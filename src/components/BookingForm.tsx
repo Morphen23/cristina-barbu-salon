@@ -41,6 +41,10 @@ function formatDateLabel(date: Date): string {
   return `${RO_DAYS[date.getDay()]} ${date.getDate()} ${RO_MONTHS[date.getMonth()]}`;
 }
 
+function formatDateLabelShort(date: Date): string {
+  return `${RO_DAYS[date.getDay()]} ${date.getDate()}`;
+}
+
 function buildSlotsUrl(
   date: string,
   serviceId: string,
@@ -155,6 +159,9 @@ export default function BookingForm() {
     setDirection(dir);
     setStep(next);
     setError(null);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   function goNext() {
@@ -250,8 +257,8 @@ export default function BookingForm() {
 
   if (success) {
     return (
-      <div className="booking-reveal glass-card p-12 text-center md:p-16">
-        <p className="font-display text-4xl text-foreground">Rezervare confirmată</p>
+      <div className="booking-reveal glass-card p-8 text-center sm:p-12 md:p-16">
+        <p className="font-display text-3xl text-foreground sm:text-4xl">Rezervare confirmată</p>
         <p className="mx-auto mt-6 max-w-md leading-relaxed text-muted">
           Îți mulțumim! Te așteptăm la salon. Vei primi un mesaj de confirmare.
         </p>
@@ -270,7 +277,7 @@ export default function BookingForm() {
   }
 
   return (
-    <div>
+    <div className="w-full min-w-0 pb-28 md:pb-0">
       <BookingProgress
         steps={steps.map((id) => stepLabels[id])}
         currentIndex={stepIndex}
@@ -281,34 +288,34 @@ export default function BookingForm() {
         className={stepAnim}
       >
         {step === "service" && (
-          <section className="space-y-8">
+          <section className="space-y-6 sm:space-y-8">
             <div>
-              <h2 className="font-display text-3xl text-foreground md:text-4xl">
+              <h2 className="font-display text-2xl text-foreground sm:text-3xl md:text-4xl">
                 Ce serviciu îți dorești?
               </h2>
-              <p className="mt-3 max-w-lg text-muted">
-                Alege o singură opțiune. Poți reveni oricând la pasul anterior.
+              <p className="mt-2 text-sm text-muted sm:mt-3 sm:text-base">
+                Alege o singură opțiune.
               </p>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {bookableServices.map((service) => (
                 <button
                   key={service.id}
                   type="button"
                   onClick={() => handleServiceSelect(service.id)}
-                  className={`glass-card glass-card-interactive flex w-full flex-col items-start gap-3 p-5 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-6 md:p-6 ${
+                  className={`glass-card glass-card-interactive flex w-full min-w-0 items-center justify-between gap-3 p-4 text-left sm:p-5 md:p-6 ${
                     serviceId === service.id ? "glass-slot-selected" : ""
                   }`}
                 >
-                  <div>
-                    <p className="font-display text-xl text-foreground">{service.name}</p>
-                    <p className="mt-1 text-sm text-muted">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-lg text-foreground sm:text-xl">{service.name}</p>
+                    <p className="mt-0.5 text-xs text-muted sm:mt-1 sm:text-sm">
                       {service.id === "balayage"
                         ? "de la 4 ore · personalizat"
                         : `${service.priceLabel ?? `${service.price} lei`} · ${service.durationMinutes} min`}
                     </p>
                   </div>
-                  <span className="text-[0.65rem] uppercase tracking-[0.2em] text-accent">
+                  <span className="shrink-0 text-[0.6rem] uppercase tracking-[0.16em] text-accent sm:text-[0.65rem]">
                     {serviceId === service.id ? "Selectat" : "Alege"}
                   </span>
                 </button>
@@ -318,27 +325,27 @@ export default function BookingForm() {
         )}
 
         {step === "details" && isBalayage && (
-          <section className="space-y-8">
+          <section className="space-y-6 sm:space-y-8">
             <div>
-              <h2 className="font-display text-3xl text-foreground md:text-4xl">
-                Câteva detalii despre păr
+              <h2 className="font-display text-2xl text-foreground sm:text-3xl md:text-4xl">
+                Detalii despre păr
               </h2>
-              <p className="mt-3 max-w-lg text-muted">
-                Calculăm durata exactă și blocăm intervalul complet în calendar.
+              <p className="mt-2 text-sm text-muted sm:mt-3">
+                Calculăm durata și blocăm intervalul în calendar.
               </p>
             </div>
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               <div>
-                <p className="mb-4 text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                <p className="mb-3 text-[0.6rem] uppercase tracking-[0.14em] text-muted sm:mb-4">
                   Lungimea părului
                 </p>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {(Object.keys(hairLengthLabels) as HairLength[]).map((len) => (
                     <button
                       key={len}
                       type="button"
                       onClick={() => updateBalayage({ hairLength: len })}
-                      className={`glass-slot glass-slot-interactive p-5 text-left ${
+                      className={`glass-slot glass-slot-interactive p-4 text-left sm:p-5 ${
                         balayage.hairLength === len ? "glass-slot-selected" : ""
                       }`}
                     >
@@ -420,26 +427,23 @@ export default function BookingForm() {
         )}
 
         {step === "stylist" && (
-          <section className="space-y-8">
+          <section className="space-y-6 sm:space-y-8">
             <div>
-              <h2 className="font-display text-3xl text-foreground md:text-4xl">
+              <h2 className="font-display text-2xl text-foreground sm:text-3xl md:text-4xl">
                 Cu cine programezi?
               </h2>
-              <p className="mt-3 max-w-lg text-muted">
-                Echipa noastră de colorare te așteaptă cu o consultație personalizată.
-              </p>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {stylists.map((stylist) => (
                 <button
                   key={stylist.id}
                   type="button"
                   onClick={() => setStylistId(stylist.id)}
-                  className={`glass-card glass-card-interactive flex w-full items-center gap-5 p-5 text-left md:p-6 ${
+                  className={`glass-card glass-card-interactive flex w-full min-w-0 items-start gap-4 p-4 text-left sm:items-center sm:gap-5 sm:p-5 md:p-6 ${
                     stylistId === stylist.id ? "glass-slot-selected" : ""
                   }`}
                 >
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full sm:h-20 sm:w-20">
                     <Image
                       src={stylist.image}
                       alt={stylist.name}
@@ -448,10 +452,10 @@ export default function BookingForm() {
                       sizes="80px"
                     />
                   </div>
-                  <div>
-                    <p className="font-display text-2xl text-foreground">{stylist.name}</p>
-                    <p className="mt-1 text-sm text-accent">{stylist.role}</p>
-                    <p className="mt-2 text-sm text-muted">{stylist.bio}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-xl text-foreground sm:text-2xl">{stylist.name}</p>
+                    <p className="mt-0.5 text-xs text-accent sm:mt-1 sm:text-sm">{stylist.role}</p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-muted sm:mt-2 sm:text-sm">{stylist.bio}</p>
                   </div>
                 </button>
               ))}
@@ -460,29 +464,26 @@ export default function BookingForm() {
         )}
 
         {step === "schedule" && (
-          <section>
-            <div className="mb-10">
-              <h2 className="font-display text-3xl text-foreground md:text-4xl">
+          <section className="min-w-0">
+            <div className="mb-6 sm:mb-10">
+              <h2 className="font-display text-2xl text-foreground sm:text-3xl md:text-4xl">
                 Alege ziua și ora
               </h2>
-              <p className="mt-3 max-w-lg text-muted">
-                Vezi inspirația pentru serviciul tău în timp ce alegi momentul perfect.
-              </p>
             </div>
 
-            <div className="grid gap-10 lg:grid-cols-[minmax(240px,300px)_1fr] lg:gap-12">
+            <div className="flex min-w-0 flex-col gap-6 lg:grid lg:grid-cols-[minmax(240px,300px)_1fr] lg:gap-12">
               <ServicePreview
                 service={selectedService}
                 stylistName={selectedStylist?.name}
                 durationMinutes={estimatedDuration ?? durationMinutes}
               />
 
-              <div className="space-y-8">
-                <div>
-                  <p className="mb-4 text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+              <div className="min-w-0 space-y-6 sm:space-y-8">
+                <div className="min-w-0">
+                  <p className="mb-3 text-[0.6rem] uppercase tracking-[0.14em] text-muted sm:mb-4">
                     Ziua
                   </p>
-                  <div className="flex gap-3 overflow-x-auto pb-1">
+                  <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 sm:gap-3">
                     {bookableDates.slice(0, 14).map((date) => {
                       const key = toDateKey(date);
                       return (
@@ -493,19 +494,20 @@ export default function BookingForm() {
                             setSelectedDate(key);
                             setSelectedTime(null);
                           }}
-                          className={`glass-slot glass-slot-interactive min-w-[5.5rem] shrink-0 px-3 py-3 text-center text-sm ${
+                          className={`glass-slot glass-slot-interactive min-w-[4.25rem] shrink-0 px-2.5 py-3 text-center text-xs sm:min-w-[5.5rem] sm:px-3 sm:text-sm ${
                             selectedDate === key ? "glass-slot-selected font-medium" : "text-muted"
                           }`}
                         >
-                          {formatDateLabel(date)}
+                          <span className="sm:hidden">{formatDateLabelShort(date)}</span>
+                          <span className="hidden sm:inline">{formatDateLabel(date)}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                <div>
-                  <p className="mb-4 text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                <div className="min-w-0">
+                  <p className="mb-3 text-[0.6rem] uppercase tracking-[0.14em] text-muted sm:mb-4">
                     Ora
                   </p>
                   {loadingSlots ? (
@@ -515,7 +517,7 @@ export default function BookingForm() {
                       Nu există intervale libere în această zi. Încearcă altă dată.
                     </p>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3">
                       {slots.map((slot, index) => {
                         const isAvailable = slot.status === "available";
                         const isSelected = selectedTime === slot.time;
@@ -526,7 +528,7 @@ export default function BookingForm() {
                             disabled={!isAvailable}
                             onClick={() => setSelectedTime(slot.time)}
                             style={{ animationDelay: `${Math.min(index, 8) * 0.035}s` }}
-                            className={`booking-reveal px-4 py-3.5 text-left text-sm ${
+                            className={`booking-reveal min-h-[3rem] px-2 py-2.5 text-center text-xs sm:px-4 sm:py-3.5 sm:text-left sm:text-sm ${
                               !isAvailable
                                 ? "glass-slot-occupied cursor-not-allowed text-muted/45"
                                 : isSelected
@@ -553,20 +555,20 @@ export default function BookingForm() {
         )}
 
         {step === "contact" && (
-          <form onSubmit={handleSubmit} className="space-y-10">
-            <div className="grid gap-10 lg:grid-cols-[minmax(220px,260px)_1fr] lg:gap-12">
+          <form onSubmit={handleSubmit} className="min-w-0 space-y-6 sm:space-y-10">
+            <div className="flex min-w-0 flex-col gap-6 lg:grid lg:grid-cols-[minmax(220px,260px)_1fr] lg:gap-12">
               <ServicePreview
                 service={selectedService}
                 stylistName={selectedStylist?.name}
                 durationMinutes={durationMinutes ?? estimatedDuration}
                 compact
               />
-              <div className="space-y-6">
+              <div className="min-w-0 space-y-5 sm:space-y-6">
                 <div>
-                  <h2 className="font-display text-3xl text-foreground md:text-4xl">
+                  <h2 className="font-display text-2xl text-foreground sm:text-3xl md:text-4xl">
                     Ultimele detalii
                   </h2>
-                  <p className="mt-3 text-muted">
+                  <p className="mt-2 text-sm text-muted sm:mt-3">
                     {formatDateLabel(
                       bookableDates.find((d) => toDateKey(d) === selectedDate) ?? new Date(),
                     )}{" "}
@@ -575,7 +577,7 @@ export default function BookingForm() {
                   </p>
                 </div>
 
-                <div className="grid gap-5 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
                   <label className="block sm:col-span-2">
                     <span className="mb-2 block text-[0.65rem] uppercase tracking-[0.18em] text-muted">
                       Nume complet
@@ -631,35 +633,37 @@ export default function BookingForm() {
       </div>
 
       {step !== "contact" && (
-        <div className="mt-12 flex items-center justify-between gap-4 border-t border-border pt-8">
-          {stepIndex > 0 ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[rgba(248,246,243,0.96)] px-4 py-3 backdrop-blur-xl pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:mt-10 md:border-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-none">
+          <div className="mx-auto flex max-w-5xl items-center gap-3">
+            {stepIndex > 0 ? (
+              <button
+                type="button"
+                onClick={goBack}
+                className="shrink-0 py-3 text-[0.6rem] uppercase tracking-[0.16em] text-muted sm:text-[0.65rem]"
+              >
+                ← Înapoi
+              </button>
+            ) : (
+              <span className="w-14 shrink-0 sm:w-auto" />
+            )}
             <button
               type="button"
-              onClick={goBack}
-              className="text-[0.65rem] uppercase tracking-[0.2em] text-muted transition-colors hover:text-foreground"
+              onClick={goNext}
+              disabled={!canContinue()}
+              className="btn-premium min-h-[48px] flex-1 border border-foreground bg-foreground py-3.5 text-[0.65rem] uppercase tracking-[0.18em] text-background disabled:cursor-not-allowed disabled:opacity-40 md:flex-none md:px-10"
             >
-              ← Înapoi
+              Continuă →
             </button>
-          ) : (
-            <span />
-          )}
-          <button
-            type="button"
-            onClick={goNext}
-            disabled={!canContinue()}
-            className="btn-premium w-full border border-foreground bg-foreground px-8 py-3.5 text-[0.65rem] uppercase tracking-[0.22em] text-background disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:px-10"
-          >
-            Continuă →
-          </button>
+          </div>
         </div>
       )}
 
       {step === "contact" && stepIndex > 0 && (
-        <div className="mt-8 border-t border-border pt-8">
+        <div className="mt-6 border-t border-border pt-6 md:mt-8 md:pt-8">
           <button
             type="button"
             onClick={goBack}
-            className="text-[0.65rem] uppercase tracking-[0.2em] text-muted transition-colors hover:text-foreground"
+            className="py-2 text-[0.6rem] uppercase tracking-[0.16em] text-muted sm:text-[0.65rem]"
           >
             ← Înapoi la programare
           </button>

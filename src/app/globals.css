@@ -148,15 +148,53 @@ h4 {
   transform-origin: center;
 }
 
-.glass-card-interactive:hover:not(:disabled) {
-  transform: scale(1.012);
-  filter: brightness(1.02);
-  box-shadow: var(--shadow-lift);
+@media (hover: hover) and (pointer: fine) {
+  .glass-card-interactive:hover:not(:disabled) {
+    transform: scale(1.012);
+    filter: brightness(1.02);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .glass-card-interactive:active:not(:disabled) {
+    transform: scale(1.006);
+    filter: brightness(0.99);
+  }
+
+  .glass-slot-interactive:hover:not(:disabled):not(.glass-slot-selected) {
+    transform: scale(1.015);
+    filter: brightness(1.025);
+    background: rgba(255, 253, 249, 0.78);
+    box-shadow: var(--shadow-whisper);
+    border-color: rgba(143, 133, 120, 0.18);
+  }
+
+  .glass-slot-interactive:active:not(:disabled):not(.glass-slot-selected) {
+    transform: scale(1.008);
+    filter: brightness(0.985);
+  }
+
+  .glass-slot-selected.glass-slot-interactive:hover:not(:disabled) {
+    transform: scale(1.01);
+    filter: brightness(1.015);
+  }
+
+  .btn-premium:hover:not(:disabled) {
+    transform: scale(1.018);
+    filter: brightness(1.06);
+  }
+
+  .btn-premium:active:not(:disabled) {
+    transform: scale(1.008);
+    filter: brightness(0.97);
+  }
 }
 
-.glass-card-interactive:active:not(:disabled) {
-  transform: scale(1.006);
-  filter: brightness(0.99);
+@media (hover: none) {
+  .glass-card-interactive:active:not(:disabled),
+  .glass-slot-interactive:active:not(:disabled),
+  .btn-premium:active:not(:disabled) {
+    opacity: 0.92;
+  }
 }
 
 .glass-slot {
@@ -177,19 +215,6 @@ h4 {
   transform-origin: center;
 }
 
-.glass-slot-interactive:hover:not(:disabled):not(.glass-slot-selected) {
-  transform: scale(1.015);
-  filter: brightness(1.025);
-  background: rgba(255, 253, 249, 0.78);
-  box-shadow: var(--shadow-whisper);
-  border-color: rgba(143, 133, 120, 0.18);
-}
-
-.glass-slot-interactive:active:not(:disabled):not(.glass-slot-selected) {
-  transform: scale(1.008);
-  filter: brightness(0.985);
-}
-
 .glass-slot-selected {
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
@@ -197,11 +222,6 @@ h4 {
   border: 1px solid rgba(143, 133, 120, 0.35);
   box-shadow: var(--shadow-lift);
   color: var(--foreground);
-}
-
-.glass-slot-selected.glass-slot-interactive:hover:not(:disabled) {
-  transform: scale(1.01);
-  filter: brightness(1.015);
 }
 
 .glass-slot-occupied {
@@ -218,16 +238,6 @@ h4 {
     filter var(--duration-hover) var(--ease-soft),
     opacity var(--duration-hover) var(--ease-soft);
   transform-origin: center;
-}
-
-.btn-premium:hover:not(:disabled) {
-  transform: scale(1.018);
-  filter: brightness(1.06);
-}
-
-.btn-premium:active:not(:disabled) {
-  transform: scale(1.008);
-  filter: brightness(0.97);
 }
 
 .step-enter-forward {

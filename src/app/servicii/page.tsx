@@ -17,35 +17,35 @@ export default function ServiciiPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 md:px-10 md:py-28">
-      <div className="mb-20 max-w-2xl md:mb-28">
-        <p className="text-[0.65rem] uppercase tracking-[0.4em] text-accent">
+    <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-14 sm:px-8 sm:py-20 md:px-10 md:py-28">
+      <div className="mb-12 max-w-2xl sm:mb-20 md:mb-28">
+        <p className="text-[0.6rem] uppercase tracking-[0.22em] text-accent sm:tracking-[0.35em]">
           Servicii & Prețuri
         </p>
-        <h1 className="mt-6 font-display text-5xl leading-tight text-foreground md:text-6xl">
+        <h1 className="mt-4 font-display text-3xl leading-tight text-foreground sm:mt-6 sm:text-5xl md:text-6xl">
           Ce îți oferim
         </h1>
-        <p className="mt-8 leading-relaxed text-muted">
+        <p className="mt-4 text-sm leading-relaxed text-muted sm:mt-8 sm:text-base">
           Prețurile sunt orientative și pot varia în funcție de lungimea părului,
           complexitatea lucrării și produsele folosite. Consultația ne ajută să
           stabilim prețul exact.
         </p>
       </div>
 
-      <div className="space-y-20 md:space-y-28">
+      <div className="space-y-14 sm:space-y-20 md:space-y-28">
         {grouped.map((group) => (
           <section key={group.category}>
-            <h2 className="mb-10 border-b border-border pb-5 font-display text-3xl text-foreground">
+            <h2 className="mb-6 border-b border-border pb-4 font-display text-2xl text-foreground sm:mb-10 sm:pb-5 sm:text-3xl">
               {group.label}
             </h2>
             <div className="divide-y divide-border">
               {group.items.map((service) => (
                 <div
                   key={service.id}
-                  className="flex flex-col gap-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:py-10"
+                  className="flex flex-col gap-3 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:py-10"
                 >
-                  <div className="max-w-xl">
-                    <h3 className="font-display text-xl text-foreground">
+                  <div className="min-w-0 max-w-xl">
+                    <h3 className="font-display text-lg text-foreground sm:text-xl">
                       {service.name}
                     </h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted">
@@ -55,7 +55,7 @@ export default function ServiciiPage() {
                       Durată: ~{service.durationMinutes} min
                     </p>
                   </div>
-                  <p className="shrink-0 font-display text-2xl text-accent md:text-3xl">
+                  <p className="shrink-0 font-display text-xl text-accent sm:text-2xl md:text-3xl">
                     {service.priceLabel ??
                       (service.price === 0 ? "Gratuit" : `${service.price} lei`)}
                   </p>
@@ -66,16 +66,16 @@ export default function ServiciiPage() {
         ))}
       </div>
 
-      <div className="glass-card mt-24 p-12 text-center md:mt-32 md:p-16">
-        <h2 className="font-display text-3xl text-foreground md:text-4xl">
+      <div className="glass-card mt-16 p-8 text-center sm:mt-24 sm:p-12 md:mt-32 md:p-16">
+        <h2 className="font-display text-2xl text-foreground sm:text-3xl md:text-4xl">
           Programează-te online
         </h2>
-        <p className="mx-auto mt-4 max-w-md leading-relaxed text-muted">
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted sm:mt-4">
           Vezi intervalele libere și rezervă direct din calendar.
         </p>
         <Link
           href="/rezervari"
-          className="mt-10 inline-block border border-foreground bg-foreground px-10 py-3.5 text-[0.65rem] uppercase tracking-[0.22em] text-background transition-opacity hover:opacity-85"
+          className="btn-premium mt-8 inline-block w-full border border-foreground bg-foreground px-8 py-3.5 text-[0.65rem] uppercase tracking-[0.22em] text-background sm:mt-10 sm:w-auto sm:px-10"
         >
           Mergi la rezervări
         </Link>

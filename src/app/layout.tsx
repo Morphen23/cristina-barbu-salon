@@ -37,10 +37,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ro" className={`${cormorant.variable} ${lato.variable} h-full`}>
-      <body className="flex min-h-full flex-col overflow-x-hidden antialiased font-sans pb-[env(safe-area-inset-bottom)]">
+    <html lang="ro" className={`${cormorant.variable} ${lato.variable} h-full overflow-x-hidden`}>
+      <body className="flex min-h-full w-full max-w-[100vw] flex-col overflow-x-hidden antialiased font-sans pb-[env(safe-area-inset-bottom)]">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="w-full min-w-0 flex-1">{children}</main>
         <Footer />
       </body>
     </html>

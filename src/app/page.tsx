@@ -5,7 +5,7 @@ export default function HomePage() {
   return (
     <>
       <section className="border-b border-border">
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5 py-20 sm:px-8 sm:py-28 md:gap-14 md:px-10 md:py-40">
+        <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-8 px-4 py-16 sm:gap-10 sm:px-8 sm:py-24 md:gap-14 md:px-10 md:py-40">
           <p className="text-[0.6rem] uppercase tracking-[0.3em] text-accent sm:text-[0.65rem] sm:tracking-[0.4em]">
             {salon.tagline}
           </p>
@@ -38,7 +38,7 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28 md:px-10 md:py-36">
         <div className="grid gap-20 md:grid-cols-2 md:gap-24">
           <div>
-            <h2 className="font-display text-4xl leading-snug text-foreground md:text-5xl">
+            <h2 className="font-display text-3xl leading-snug text-foreground sm:text-4xl md:text-5xl">
               Arta culorii, în mâinile tale
             </h2>
             <p className="mt-8 leading-relaxed text-muted">
@@ -66,8 +66,8 @@ export default function HomePage() {
                 text: "Atmosferă elegantă, atenție la detalii, rezultate impecabile.",
               },
             ].map((item) => (
-              <div key={item.title} className="glass-card p-8 md:p-9">
-                <h3 className="font-display text-2xl text-foreground">
+              <div key={item.title} className="glass-card p-6 sm:p-8 md:p-9">
+                <h3 className="font-display text-xl text-foreground sm:text-2xl">
                   {item.title}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted">
@@ -80,17 +80,17 @@ export default function HomePage() {
       </section>
 
       <section className="border-t border-border bg-background-subtle/40">
-        <div className="mx-auto max-w-6xl px-8 py-28 text-center md:px-10 md:py-36">
-          <h2 className="font-display text-4xl text-foreground md:text-5xl">
+        <div className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-8 sm:py-28 md:px-10 md:py-36">
+          <h2 className="font-display text-3xl text-foreground sm:text-4xl md:text-5xl">
             Gata pentru o transformare?
           </h2>
-          <p className="mx-auto mt-6 max-w-md leading-relaxed text-muted">
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted sm:mt-6">
             Alege ziua și intervalul care ți se potrivește — direct online, în
             câteva minute.
           </p>
           <Link
             href="/rezervari"
-            className="mt-12 inline-block border border-foreground px-12 py-4 text-[0.65rem] uppercase tracking-[0.22em] text-foreground transition-colors hover:bg-foreground hover:text-background"
+            className="btn-premium mt-8 inline-block w-full border border-foreground px-8 py-4 text-[0.65rem] uppercase tracking-[0.22em] text-foreground sm:mt-12 sm:w-auto sm:px-12"
           >
             Rezervă acum
           </Link>

@@ -1,35 +1,266 @@
 @import "tailwindcss";
 
 :root {
-  --background: #141210;
-  --foreground: #f5f0e8;
-  --surface: #1c1916;
-  --border: #3d3630;
-  --muted: #a89f94;
-  --accent: #c9a96e;
+  --background: #f8f6f3;
+  --background-subtle: #f2efe9;
+  --foreground: #2e2c28;
+  --surface: rgba(255, 251, 245, 0.65);
+  --border: rgba(46, 44, 40, 0.09);
+  --border-strong: rgba(46, 44, 40, 0.14);
+  --muted: #7a756d;
+  --accent: #8f8578;
+  --accent-soft: rgba(143, 133, 120, 0.12);
+  --glass-bg: rgba(255, 252, 247, 0.58);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --shadow-whisper: 0 1px 2px rgba(46, 44, 40, 0.03),
+    0 8px 32px rgba(46, 44, 40, 0.04);
+  --shadow-lift: 0 2px 4px rgba(46, 44, 40, 0.04),
+    0 16px 48px rgba(46, 44, 40, 0.06);
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-page: 0.55s;
+  --duration-float: 0.75s;
+  --duration-hover: 0.5s;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-subtle: var(--background-subtle);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --font-sans: var(--font-dm-sans);
+  --color-accent-soft: var(--accent-soft);
+  --font-sans: var(--font-lato);
   --font-display: var(--font-cormorant);
 }
 
+@keyframes soft-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: soft-fade-in var(--duration-page) var(--ease-soft) both;
+}
+
+.booking-reveal {
+  animation: float-up var(--duration-float) var(--ease-soft) both;
+}
+
+.booking-reveal-delay-1 {
+  animation-delay: 0.07s;
+}
+.booking-reveal-delay-2 {
+  animation-delay: 0.14s;
+}
+.booking-reveal-delay-3 {
+  animation-delay: 0.21s;
+}
+.booking-reveal-delay-4 {
+  animation-delay: 0.28s;
+}
+.booking-reveal-delay-5 {
+  animation-delay: 0.35s;
+}
+.booking-reveal-delay-6 {
+  animation-delay: 0.42s;
+}
+
 body {
-  background: var(--background);
+  background: linear-gradient(180deg, #faf9f7 0%, var(--background) 40%, #f3f0ea 100%);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: var(--font-lato), system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.012em;
+  line-height: 1.75;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
 }
 
 .font-display {
-  font-family: var(--font-cormorant), Georgia, serif;
+  font-family: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-whisper);
+}
+
+.glass-card-interactive {
+  transition:
+    transform var(--duration-hover) var(--ease-soft),
+    filter var(--duration-hover) var(--ease-soft),
+    box-shadow var(--duration-hover) var(--ease-soft),
+    background var(--duration-hover) var(--ease-soft);
+  transform-origin: center;
+}
+
+.glass-card-interactive:hover:not(:disabled) {
+  transform: scale(1.012);
+  filter: brightness(1.02);
+  box-shadow: var(--shadow-lift);
+}
+
+.glass-card-interactive:active:not(:disabled) {
+  transform: scale(1.006);
+  filter: brightness(0.99);
+}
+
+.glass-slot {
+  background: rgba(255, 253, 249, 0.52);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 1px 2px rgba(46, 44, 40, 0.025);
+}
+
+.glass-slot-interactive {
+  transition:
+    transform var(--duration-hover) var(--ease-soft),
+    filter var(--duration-hover) var(--ease-soft),
+    background var(--duration-hover) var(--ease-soft),
+    box-shadow var(--duration-hover) var(--ease-soft),
+    border-color var(--duration-hover) var(--ease-soft);
+  transform-origin: center;
+}
+
+.glass-slot-interactive:hover:not(:disabled):not(.glass-slot-selected) {
+  transform: scale(1.015);
+  filter: brightness(1.025);
+  background: rgba(255, 253, 249, 0.78);
+  box-shadow: var(--shadow-whisper);
+  border-color: rgba(143, 133, 120, 0.18);
+}
+
+.glass-slot-interactive:active:not(:disabled):not(.glass-slot-selected) {
+  transform: scale(1.008);
+  filter: brightness(0.985);
+}
+
+.glass-slot-selected {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(143, 133, 120, 0.35);
+  box-shadow: var(--shadow-lift);
+  color: var(--foreground);
+}
+
+.glass-slot-selected.glass-slot-interactive:hover:not(:disabled) {
+  transform: scale(1.01);
+  filter: brightness(1.015);
+}
+
+.glass-slot-occupied {
+  background: rgba(242, 239, 233, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(46, 44, 40, 0.06);
+  box-shadow: none;
+}
+
+.btn-premium {
+  transition:
+    transform var(--duration-hover) var(--ease-soft),
+    filter var(--duration-hover) var(--ease-soft),
+    opacity var(--duration-hover) var(--ease-soft);
+  transform-origin: center;
+}
+
+.btn-premium:hover:not(:disabled) {
+  transform: scale(1.018);
+  filter: brightness(1.06);
+}
+
+.btn-premium:active:not(:disabled) {
+  transform: scale(1.008);
+  filter: brightness(0.97);
+}
+
+.step-enter-forward {
+  animation: step-enter-forward 0.55s var(--ease-soft) both;
+}
+
+.step-enter-back {
+  animation: step-enter-back 0.55s var(--ease-soft) both;
+}
+
+@keyframes step-enter-forward {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes step-enter-back {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition,
+  .booking-reveal,
+  .step-enter-forward,
+  .step-enter-back {
+    animation: none;
+  }
+
+  .glass-card-interactive,
+  .glass-slot-interactive,
+  .btn-premium {
+    transition: none;
+  }
+
+  .glass-card-interactive:hover,
+  .glass-slot-interactive:hover,
+  .btn-premium:hover {
+    transform: none;
+    filter: none;
+  }
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
+

@@ -1,7 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import BookingProgress from "@/components/BookingProgress";
+import ServicePreview from "@/components/ServicePreview";
 import {
   calculateBalayageDuration,
   formatDuration,
@@ -11,26 +14,18 @@ import {
   type BalayageOptions,
   type HairLength,
 } from "@/lib/balayage";
+import { stylists } from "@/lib/booking-ui";
 import { services, type Service } from "@/lib/config";
 import { getBookableDates, toDateKey, type TimeSlot } from "@/lib/slots";
 
 type SlotWithEnd = TimeSlot & { endTime?: string };
+type StepId = "service" | "details" | "stylist" | "schedule" | "contact";
+type StepDirection = "forward" | "back";
 
 const RO_MONTHS = [
-  "Ianuarie",
-  "Februarie",
-  "Martie",
-  "Aprilie",
-  "Mai",
-  "Iunie",
-  "Iulie",
-  "August",
-  "Septembrie",
-  "Octombrie",
-  "Noiembrie",
-  "Decembrie",
+  "Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie",
+  "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie",
 ];
-
 const RO_DAYS = ["Du", "Lu", "Ma", "Mi", "Jo", "Vi", "Sâ"];
 
 const defaultBalayage: Partial<BalayageOptions> = {
@@ -39,6 +34,8 @@ const defaultBalayage: Partial<BalayageOptions> = {
   wantsCut: false,
   wantsStyling: false,
 };
+
+const bookableServices = services.filter((s) => s.id !== "consultatie");
 
 function formatDateLabel(date: Date): string {
   return `${RO_DAYS[date.getDay()]} ${date.getDate()} ${RO_MONTHS[date.getMonth()]}`;
@@ -59,11 +56,28 @@ function buildSlotsUrl(
   return `/api/slots?${params}`;
 }
 
+function getStepFlow(isBalayage: boolean): StepId[] {
+  return isBalayage
+    ? ["service", "details", "stylist", "schedule", "contact"]
+    : ["service", "stylist", "schedule", "contact"];
+}
+
+const stepLabels: Record<StepId, string> = {
+  service: "Serviciu",
+  details: "Detalii",
+  stylist: "Stilist",
+  schedule: "Data & ora",
+  contact: "Confirmare",
+};
+
 export default function BookingForm() {
   const searchParams = useSearchParams();
   const bookableDates = getBookableDates();
 
-  const [serviceId, setServiceId] = useState(services[1]?.id ?? "");
+  const [step, setStep] = useState<StepId>("service");
+  const [direction, setDirection] = useState<StepDirection>("forward");
+  const [serviceId, setServiceId] = useState("");
+  const [stylistId, setStylistId] = useState(stylists[0]?.id ?? "");
   const [balayage, setBalayage] = useState<Partial<BalayageOptions>>(defaultBalayage);
   const [hairColorSelect, setHairColorSelect] = useState("");
   const [customHairColor, setCustomHairColor] = useState("");
@@ -77,7 +91,6 @@ export default function BookingForm() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -90,10 +103,13 @@ export default function BookingForm() {
 
   const isBalayage = serviceId === "balayage";
   const balayageComplete = isBalayageOptionsComplete(balayage);
+  const steps = getStepFlow(isBalayage);
+  const stepIndex = steps.indexOf(step);
 
   const selectedService = services.find((s) => s.id === serviceId) as
     | Service
     | undefined;
+  const selectedStylist = stylists.find((s) => s.id === stylistId);
 
   const estimatedDuration = useMemo(() => {
     if (isBalayage && balayageComplete) {
@@ -103,16 +119,13 @@ export default function BookingForm() {
   }, [isBalayage, balayage, balayageComplete, selectedService]);
 
   const canLoadSlots =
+    step === "schedule" &&
     !!serviceId &&
     !!selectedDate &&
     (!isBalayage || balayageComplete);
 
   const fetchSlots = useCallback(async () => {
-    if (!canLoadSlots) {
-      setSlots([]);
-      setDurationMinutes(null);
-      return;
-    }
+    if (!canLoadSlots) return;
     setLoadingSlots(true);
     setSelectedTime(null);
     setError(null);
@@ -138,7 +151,23 @@ export default function BookingForm() {
     fetchSlots();
   }, [fetchSlots]);
 
-  function handleServiceChange(id: string) {
+  function goTo(next: StepId, dir: StepDirection = "forward") {
+    setDirection(dir);
+    setStep(next);
+    setError(null);
+  }
+
+  function goNext() {
+    const idx = steps.indexOf(step);
+    if (idx < steps.length - 1) goTo(steps[idx + 1]!);
+  }
+
+  function goBack() {
+    const idx = steps.indexOf(step);
+    if (idx > 0) goTo(steps[idx - 1]!, "back");
+  }
+
+  function handleServiceSelect(id: string) {
     setServiceId(id);
     setBalayage({ ...defaultBalayage });
     setHairColorSelect("");
@@ -149,6 +178,21 @@ export default function BookingForm() {
   function updateBalayage(patch: Partial<BalayageOptions>) {
     setBalayage((prev) => ({ ...prev, ...patch }));
     setSelectedTime(null);
+  }
+
+  function canContinue(): boolean {
+    switch (step) {
+      case "service":
+        return !!serviceId;
+      case "details":
+        return balayageComplete;
+      case "stylist":
+        return !!stylistId;
+      case "schedule":
+        return !!selectedTime;
+      default:
+        return false;
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -180,12 +224,10 @@ export default function BookingForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       const data = await res.json();
 
       if (!res.ok) {
         setError(data.error ?? "Rezervarea nu a putut fi finalizată.");
-        await fetchSlots();
         return;
       }
 
@@ -194,8 +236,8 @@ export default function BookingForm() {
       setClientPhone("");
       setClientEmail("");
       setSelectedTime(null);
-      setBalayage({ ...defaultBalayage });
-      await fetchSlots();
+      setServiceId("");
+      setStep("service");
     } catch {
       setError("Eroare de conexiune. Încearcă din nou.");
     } finally {
@@ -204,18 +246,22 @@ export default function BookingForm() {
   }
 
   const selectedSlot = slots.find((s) => s.time === selectedTime);
+  const stepAnim = direction === "forward" ? "step-enter-forward" : "step-enter-back";
 
   if (success) {
     return (
-      <div className="border border-accent/40 bg-surface p-10 text-center">
-        <p className="font-display text-3xl text-accent">Rezervare confirmată</p>
-        <p className="mt-4 text-muted">
+      <div className="booking-reveal glass-card p-12 text-center md:p-16">
+        <p className="font-display text-4xl text-foreground">Rezervare confirmată</p>
+        <p className="mx-auto mt-6 max-w-md leading-relaxed text-muted">
           Îți mulțumim! Te așteptăm la salon. Vei primi un mesaj de confirmare.
         </p>
         <button
           type="button"
-          onClick={() => setSuccess(false)}
-          className="mt-8 border border-accent px-6 py-3 text-xs uppercase tracking-[0.2em] text-accent transition-colors hover:bg-accent hover:text-background"
+          onClick={() => {
+            setSuccess(false);
+            setBalayage({ ...defaultBalayage });
+          }}
+          className="btn-premium mt-10 border border-border-strong px-8 py-3.5 text-[0.65rem] uppercase tracking-[0.22em] text-foreground"
         >
           Rezervă alt interval
         </button>
@@ -223,83 +269,93 @@ export default function BookingForm() {
     );
   }
 
-  let stepCounter = 1;
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-10">
-      <section>
-        <h2 className="mb-4 text-xs uppercase tracking-[0.25em] text-accent">
-          {stepCounter++}. Alege serviciul
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {services
-            .filter((s) => s.id !== "consultatie")
-            .map((service) => (
-              <button
-                key={service.id}
-                type="button"
-                onClick={() => handleServiceChange(service.id)}
-                className={`border p-4 text-left transition-all ${
-                  serviceId === service.id
-                    ? "border-accent bg-accent/10"
-                    : "border-border hover:border-accent/50"
-                }`}
-              >
-                <p className="font-medium text-foreground">{service.name}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {service.id === "balayage"
-                    ? "de la 4 ore · durată personalizată"
-                    : `${service.priceLabel ?? `${service.price} lei`} · ${service.durationMinutes} min`}
-                </p>
-              </button>
-            ))}
-        </div>
-      </section>
+    <div>
+      <BookingProgress
+        steps={steps.map((id) => stepLabels[id])}
+        currentIndex={stepIndex}
+      />
 
-      {isBalayage && (
-        <section className="border border-accent/20 bg-surface/50 p-6">
-          <h2 className="mb-2 text-xs uppercase tracking-[0.25em] text-accent">
-            {stepCounter++}. Detalii balayage
-          </h2>
-          <p className="mb-6 text-sm text-muted">
-            Durata se calculează automat în funcție de lungimea părului și
-            serviciile extra. Intervalul ales va fi blocat complet în calendar.
-          </p>
-
-          <div className="space-y-6">
+      <div
+        key={step}
+        className={stepAnim}
+      >
+        {step === "service" && (
+          <section className="space-y-8">
             <div>
-              <p className="mb-3 text-xs uppercase tracking-[0.15em] text-muted">
-                Lungimea părului *
+              <h2 className="font-display text-3xl text-foreground md:text-4xl">
+                Ce serviciu îți dorești?
+              </h2>
+              <p className="mt-3 max-w-lg text-muted">
+                Alege o singură opțiune. Poți reveni oricând la pasul anterior.
               </p>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {(Object.keys(hairLengthLabels) as HairLength[]).map((len) => (
-                  <button
-                    key={len}
-                    type="button"
-                    onClick={() => updateBalayage({ hairLength: len })}
-                    className={`border p-4 text-left transition-all ${
-                      balayage.hairLength === len
-                        ? "border-accent bg-accent/10"
-                        : "border-border hover:border-accent/50"
-                    }`}
-                  >
-                    <p className="font-medium text-foreground">
-                      {hairLengthLabels[len]}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                      {len === "scurt" && "min. 4 ore"}
-                      {len === "mediu" && "~5h – 5h30"}
-                      {len === "lung" && "min. 7 ore"}
-                    </p>
-                  </button>
-                ))}
-              </div>
             </div>
+            <div className="space-y-3">
+              {bookableServices.map((service) => (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => handleServiceSelect(service.id)}
+                  className={`glass-card glass-card-interactive flex w-full items-center justify-between gap-6 p-5 text-left md:p-6 ${
+                    serviceId === service.id ? "glass-slot-selected" : ""
+                  }`}
+                >
+                  <div>
+                    <p className="font-display text-xl text-foreground">{service.name}</p>
+                    <p className="mt-1 text-sm text-muted">
+                      {service.id === "balayage"
+                        ? "de la 4 ore · personalizat"
+                        : `${service.priceLabel ?? `${service.price} lei`} · ${service.durationMinutes} min`}
+                    </p>
+                  </div>
+                  <span className="text-[0.65rem] uppercase tracking-[0.2em] text-accent">
+                    {serviceId === service.id ? "Selectat" : "Alege"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
+        {step === "details" && isBalayage && (
+          <section className="space-y-8">
             <div>
+              <h2 className="font-display text-3xl text-foreground md:text-4xl">
+                Câteva detalii despre păr
+              </h2>
+              <p className="mt-3 max-w-lg text-muted">
+                Calculăm durata exactă și blocăm intervalul complet în calendar.
+              </p>
+            </div>
+            <div className="space-y-8">
+              <div>
+                <p className="mb-4 text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                  Lungimea părului
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {(Object.keys(hairLengthLabels) as HairLength[]).map((len) => (
+                    <button
+                      key={len}
+                      type="button"
+                      onClick={() => updateBalayage({ hairLength: len })}
+                      className={`glass-slot glass-slot-interactive p-5 text-left ${
+                        balayage.hairLength === len ? "glass-slot-selected" : ""
+                      }`}
+                    >
+                      <p className="font-medium">{hairLengthLabels[len]}</p>
+                      <p className="mt-1 text-xs text-muted">
+                        {len === "scurt" && "min. 4 ore"}
+                        {len === "mediu" && "~5h – 5h30"}
+                        {len === "lung" && "min. 7 ore"}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <label className="block">
-                <span className="mb-2 block text-xs uppercase tracking-[0.15em] text-muted">
-                  Culoarea actuală a părului *
+                <span className="mb-2 block text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                  Culoarea actuală
                 </span>
                 <select
                   value={hairColorSelect}
@@ -313,19 +369,18 @@ export default function BookingForm() {
                       updateBalayage({ hairColor: val });
                     }
                   }}
-                  className="w-full border border-border bg-background px-4 py-3 text-foreground outline-none focus:border-accent"
+                  className="glass-slot w-full px-4 py-3.5 outline-none focus:glass-slot-selected"
                 >
                   <option value="">Selectează...</option>
                   {hairColorOptions.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
+                    <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </label>
+
               {hairColorSelect === "Altul" && (
                 <input
-                  className="mt-2 w-full border border-border bg-transparent px-4 py-3 text-foreground outline-none focus:border-accent"
+                  className="glass-slot w-full px-4 py-3.5 outline-none focus:glass-slot-selected"
                   placeholder="Descrie culoarea părului tău"
                   value={customHairColor}
                   onChange={(e) => {
@@ -334,234 +389,282 @@ export default function BookingForm() {
                   }}
                 />
               )}
-            </div>
 
-            <div>
-              <p className="mb-3 text-xs uppercase tracking-[0.15em] text-muted">
-                Servicii extra (+30 min fiecare)
-              </p>
               <div className="flex flex-wrap gap-3">
-                <label className="flex cursor-pointer items-center gap-3 border border-border px-4 py-3 has-[:checked]:border-accent has-[:checked]:bg-accent/10">
+                <label className="glass-slot flex cursor-pointer items-center gap-3 px-5 py-3.5 has-[:checked]:glass-slot-selected">
                   <input
                     type="checkbox"
                     checked={balayage.wantsCut ?? false}
-                    onChange={(e) =>
-                      updateBalayage({ wantsCut: e.target.checked })
-                    }
+                    onChange={(e) => updateBalayage({ wantsCut: e.target.checked })}
                   />
-                  <span className="text-sm text-foreground">+ Tuns</span>
+                  <span className="text-sm">+ Tuns</span>
                 </label>
-                <label className="flex cursor-pointer items-center gap-3 border border-border px-4 py-3 has-[:checked]:border-accent has-[:checked]:bg-accent/10">
+                <label className="glass-slot flex cursor-pointer items-center gap-3 px-5 py-3.5 has-[:checked]:glass-slot-selected">
                   <input
                     type="checkbox"
                     checked={balayage.wantsStyling ?? false}
-                    onChange={(e) =>
-                      updateBalayage({ wantsStyling: e.target.checked })
-                    }
+                    onChange={(e) => updateBalayage({ wantsStyling: e.target.checked })}
                   />
-                  <span className="text-sm text-foreground">+ Coafat</span>
+                  <span className="text-sm">+ Coafat</span>
                 </label>
               </div>
-            </div>
 
-            {estimatedDuration && balayage.hairLength && (
-              <div className="border border-accent/30 bg-accent/5 p-4">
+              {estimatedDuration && balayage.hairLength && (
                 <p className="text-sm text-muted">
-                  Durată estimată:{" "}
-                  <span className="font-medium text-accent">
-                    {formatDuration(estimatedDuration)}
-                  </span>
+                  Durată estimată ·{" "}
+                  <span className="text-foreground">{formatDuration(estimatedDuration)}</span>
                 </p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+              )}
+            </div>
+          </section>
+        )}
 
-      {(!isBalayage || balayageComplete) && (
-        <section>
-          <h2 className="mb-4 text-xs uppercase tracking-[0.25em] text-accent">
-            {stepCounter++}. Alege ziua
-          </h2>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {bookableDates.slice(0, 21).map((date) => {
-              const key = toDateKey(date);
-              return (
+        {step === "stylist" && (
+          <section className="space-y-8">
+            <div>
+              <h2 className="font-display text-3xl text-foreground md:text-4xl">
+                Cu cine programezi?
+              </h2>
+              <p className="mt-3 max-w-lg text-muted">
+                Echipa noastră de colorare te așteaptă cu o consultație personalizată.
+              </p>
+            </div>
+            <div className="space-y-4">
+              {stylists.map((stylist) => (
                 <button
-                  key={key}
+                  key={stylist.id}
                   type="button"
-                  onClick={() => {
-                    setSelectedDate(key);
-                    setSelectedTime(null);
-                  }}
-                  className={`min-w-[5.5rem] shrink-0 border px-3 py-3 text-center text-sm transition-all ${
-                    selectedDate === key
-                      ? "border-accent bg-accent text-background"
-                      : "border-border text-muted hover:border-accent/50"
+                  onClick={() => setStylistId(stylist.id)}
+                  className={`glass-card glass-card-interactive flex w-full items-center gap-5 p-5 text-left md:p-6 ${
+                    stylistId === stylist.id ? "glass-slot-selected" : ""
                   }`}
                 >
-                  {formatDateLabel(date)}
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full">
+                    <Image
+                      src={stylist.image}
+                      alt={stylist.name}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-display text-2xl text-foreground">{stylist.name}</p>
+                    <p className="mt-1 text-sm text-accent">{stylist.role}</p>
+                    <p className="mt-2 text-sm text-muted">{stylist.bio}</p>
+                  </div>
                 </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
+              ))}
+            </div>
+          </section>
+        )}
 
-      {canLoadSlots && (
-        <section>
-          <h2 className="mb-4 text-xs uppercase tracking-[0.25em] text-accent">
-            {stepCounter++}. Alege ora de început
-          </h2>
-          {durationMinutes && durationMinutes >= 120 && (
-            <p className="mb-4 text-sm text-muted">
-              Se afișează doar orele la care încape întreaga programare de{" "}
-              <span className="text-accent">{formatDuration(durationMinutes)}</span>.
-            </p>
-          )}
-          {loadingSlots ? (
-            <p className="text-muted">Se încarcă intervalele...</p>
-          ) : slots.length === 0 ? (
-            <p className="text-muted">
-              Nu există intervale disponibile în această zi pentru durata
-              selectată.
-            </p>
-          ) : (
-            <>
-              <div className="mb-4 flex flex-wrap gap-4 text-xs uppercase tracking-[0.15em] text-muted">
-                <span className="flex items-center gap-2">
-                  <span className="inline-block h-3 w-3 border border-accent bg-accent/20" />
-                  Liber
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="inline-block h-3 w-3 border border-border bg-border/30" />
-                  Ocupat
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-                {slots.map((slot) => {
-                  const isAvailable = slot.status === "available";
-                  const isSelected = selectedTime === slot.time;
-                  return (
-                    <button
-                      key={slot.time}
-                      type="button"
-                      disabled={!isAvailable}
-                      onClick={() => setSelectedTime(slot.time)}
-                      className={`border px-3 py-3 text-left text-sm transition-all ${
-                        !isAvailable
-                          ? "cursor-not-allowed border-border/50 bg-border/10 text-muted/40"
-                          : isSelected
-                            ? "border-accent bg-accent text-background"
-                            : "border-accent/30 bg-accent/10 text-foreground hover:border-accent"
-                      }`}
-                    >
-                      <span className="block font-medium">{slot.time}</span>
-                      {isAvailable &&
-                        slot.endTime &&
-                        durationMinutes &&
-                        durationMinutes >= 120 && (
-                          <span
-                            className={`mt-0.5 block text-xs ${
-                              isSelected ? "text-background/80" : "text-muted"
+        {step === "schedule" && (
+          <section>
+            <div className="mb-10">
+              <h2 className="font-display text-3xl text-foreground md:text-4xl">
+                Alege ziua și ora
+              </h2>
+              <p className="mt-3 max-w-lg text-muted">
+                Vezi inspirația pentru serviciul tău în timp ce alegi momentul perfect.
+              </p>
+            </div>
+
+            <div className="grid gap-10 lg:grid-cols-[minmax(240px,300px)_1fr] lg:gap-12">
+              <ServicePreview
+                service={selectedService}
+                stylistName={selectedStylist?.name}
+                durationMinutes={estimatedDuration ?? durationMinutes}
+              />
+
+              <div className="space-y-8">
+                <div>
+                  <p className="mb-4 text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                    Ziua
+                  </p>
+                  <div className="flex gap-3 overflow-x-auto pb-1">
+                    {bookableDates.slice(0, 14).map((date) => {
+                      const key = toDateKey(date);
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => {
+                            setSelectedDate(key);
+                            setSelectedTime(null);
+                          }}
+                          className={`glass-slot glass-slot-interactive min-w-[5.5rem] shrink-0 px-3 py-3 text-center text-sm ${
+                            selectedDate === key ? "glass-slot-selected font-medium" : "text-muted"
+                          }`}
+                        >
+                          {formatDateLabel(date)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-4 text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                    Ora
+                  </p>
+                  {loadingSlots ? (
+                    <p className="text-muted">Se încarcă intervalele...</p>
+                  ) : slots.length === 0 ? (
+                    <p className="text-muted">
+                      Nu există intervale libere în această zi. Încearcă altă dată.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {slots.map((slot, index) => {
+                        const isAvailable = slot.status === "available";
+                        const isSelected = selectedTime === slot.time;
+                        return (
+                          <button
+                            key={slot.time}
+                            type="button"
+                            disabled={!isAvailable}
+                            onClick={() => setSelectedTime(slot.time)}
+                            style={{ animationDelay: `${Math.min(index, 8) * 0.035}s` }}
+                            className={`booking-reveal px-4 py-3.5 text-left text-sm ${
+                              !isAvailable
+                                ? "glass-slot-occupied cursor-not-allowed text-muted/45"
+                                : isSelected
+                                  ? "glass-slot glass-slot-interactive glass-slot-selected font-medium"
+                                  : "glass-slot glass-slot-interactive"
                             }`}
                           >
-                            → {slot.endTime}
-                          </span>
-                        )}
-                      {!isAvailable && (
-                        <span className="mt-0.5 block text-xs line-through opacity-50">
-                          ocupat
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+                            <span className="block font-medium">{slot.time}</span>
+                            {isAvailable && slot.endTime && durationMinutes && durationMinutes >= 120 && (
+                              <span className="mt-1 block text-xs text-muted">→ {slot.endTime}</span>
+                            )}
+                            {!isAvailable && (
+                              <span className="mt-1 block text-xs opacity-50">ocupat</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
-            </>
+            </div>
+          </section>
+        )}
+
+        {step === "contact" && (
+          <form onSubmit={handleSubmit} className="space-y-10">
+            <div className="grid gap-10 lg:grid-cols-[minmax(220px,260px)_1fr] lg:gap-12">
+              <ServicePreview
+                service={selectedService}
+                stylistName={selectedStylist?.name}
+                durationMinutes={durationMinutes ?? estimatedDuration}
+                compact
+              />
+              <div className="space-y-6">
+                <div>
+                  <h2 className="font-display text-3xl text-foreground md:text-4xl">
+                    Ultimele detalii
+                  </h2>
+                  <p className="mt-3 text-muted">
+                    {formatDateLabel(
+                      bookableDates.find((d) => toDateKey(d) === selectedDate) ?? new Date(),
+                    )}{" "}
+                    · {selectedTime}
+                    {selectedSlot?.endTime && ` – ${selectedSlot.endTime}`}
+                  </p>
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className="block sm:col-span-2">
+                    <span className="mb-2 block text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                      Nume complet
+                    </span>
+                    <input
+                      required
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                      className="glass-slot w-full px-4 py-3.5 outline-none focus:glass-slot-selected"
+                      placeholder="Numele tău"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                      Telefon
+                    </span>
+                    <input
+                      required
+                      type="tel"
+                      value={clientPhone}
+                      onChange={(e) => setClientPhone(e.target.value)}
+                      className="glass-slot w-full px-4 py-3.5 outline-none focus:glass-slot-selected"
+                      placeholder="07xx xxx xxx"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+                      Email (opțional)
+                    </span>
+                    <input
+                      type="email"
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      className="glass-slot w-full px-4 py-3.5 outline-none focus:glass-slot-selected"
+                      placeholder="email@exemplu.ro"
+                    />
+                  </label>
+                </div>
+
+                {error && <p className="text-sm text-[#9a6b6b]">{error}</p>}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn-premium w-full border border-foreground bg-foreground py-4 text-[0.65rem] uppercase tracking-[0.22em] text-background disabled:opacity-50 sm:w-auto sm:px-14"
+                >
+                  {submitting ? "Se procesează..." : "Confirmă rezervarea"}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {step !== "contact" && (
+        <div className="mt-12 flex items-center justify-between gap-4 border-t border-border pt-8">
+          {stepIndex > 0 ? (
+            <button
+              type="button"
+              onClick={goBack}
+              className="text-[0.65rem] uppercase tracking-[0.2em] text-muted transition-colors hover:text-foreground"
+            >
+              ← Înapoi
+            </button>
+          ) : (
+            <span />
           )}
-        </section>
-      )}
-
-      {selectedTime && (
-        <section className="border-t border-border/60 pt-10">
-          <h2 className="mb-6 text-xs uppercase tracking-[0.25em] text-accent">
-            {stepCounter++}. Datele tale
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-2 block text-xs uppercase tracking-[0.15em] text-muted">
-                Nume complet *
-              </span>
-              <input
-                required
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="w-full border border-border bg-transparent px-4 py-3 text-foreground outline-none focus:border-accent"
-                placeholder="Numele tău"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-xs uppercase tracking-[0.15em] text-muted">
-                Telefon *
-              </span>
-              <input
-                required
-                type="tel"
-                value={clientPhone}
-                onChange={(e) => setClientPhone(e.target.value)}
-                className="w-full border border-border bg-transparent px-4 py-3 text-foreground outline-none focus:border-accent"
-                placeholder="07xx xxx xxx"
-              />
-            </label>
-            <label className="block sm:col-span-2">
-              <span className="mb-2 block text-xs uppercase tracking-[0.15em] text-muted">
-                Email (opțional)
-              </span>
-              <input
-                type="email"
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-                className="w-full border border-border bg-transparent px-4 py-3 text-foreground outline-none focus:border-accent"
-                placeholder="email@exemplu.ro"
-              />
-            </label>
-          </div>
-
-          <div className="mt-6 border border-border/60 bg-surface p-4 text-sm text-muted">
-            <p>
-              <span className="text-foreground">{selectedService?.name}</span>
-              {isBalayage && balayage.hairLength && (
-                <> · {hairLengthLabels[balayage.hairLength]}</>
-              )}
-              {isBalayage && balayage.wantsCut && " · Tuns"}
-              {isBalayage && balayage.wantsStyling && " · Coafat"}
-            </p>
-            <p className="mt-2">
-              {formatDateLabel(
-                bookableDates.find((d) => toDateKey(d) === selectedDate) ??
-                  new Date(),
-              )}{" "}
-              · {selectedTime}
-              {selectedSlot?.endTime && ` – ${selectedSlot.endTime}`}
-              {durationMinutes && ` (${formatDuration(durationMinutes)})`}
-            </p>
-            {isBalayage && balayage.hairColor && (
-              <p className="mt-2 text-xs">Culoare păr: {balayage.hairColor}</p>
-            )}
-          </div>
-
-          {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
-
           <button
-            type="submit"
-            disabled={submitting}
-            className="mt-6 w-full border border-accent bg-accent py-4 text-xs uppercase tracking-[0.25em] text-background transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto sm:px-12"
+            type="button"
+            onClick={goNext}
+            disabled={!canContinue()}
+            className="btn-premium border border-foreground bg-foreground px-10 py-3.5 text-[0.65rem] uppercase tracking-[0.22em] text-background disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {submitting ? "Se procesează..." : "Confirmă rezervarea"}
+            Continuă →
           </button>
-        </section>
+        </div>
       )}
-    </form>
+
+      {step === "contact" && stepIndex > 0 && (
+        <div className="mt-8 border-t border-border pt-8">
+          <button
+            type="button"
+            onClick={goBack}
+            className="text-[0.65rem] uppercase tracking-[0.2em] text-muted transition-colors hover:text-foreground"
+          >
+            ← Înapoi la programare
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

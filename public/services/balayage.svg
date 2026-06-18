@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="400" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F2EB"/>
+      <stop offset="0.55" stop-color="#E9DFD2"/>
+      <stop offset="1" stop-color="#C4B5A3"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="120" y1="80" x2="320" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF9" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#D8CFC3" stop-opacity="0.55"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="520" fill="url(#bg)"/>
+  <ellipse cx="200" cy="430" rx="150" ry="28" fill="#2E2C28" fill-opacity="0.06"/>
+  <path d="M95 180C110 95 170 55 200 55C235 55 295 98 305 185C312 245 285 360 200 390C115 360 88 245 95 180Z" fill="url(#hair)"/>
+  <path d="M120 210C145 150 260 145 285 220C300 265 275 330 200 345C125 330 100 265 120 210Z" fill="#BFA995" fill-opacity="0.35"/>
+  <path d="M140 250C165 200 240 195 260 255C270 295 240 315 200 320C160 315 130 295 140 250Z" fill="#E8DCC8" fill-opacity="0.5"/>
+</svg>

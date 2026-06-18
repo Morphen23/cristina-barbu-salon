@@ -4,31 +4,30 @@ import { salon } from "@/lib/config";
 export default function HomePage() {
   return (
     <>
-      <section className="relative overflow-hidden border-b border-border/60">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--color-accent)_0%,_transparent_50%)] opacity-10" />
-        <div className="relative mx-auto flex max-w-6xl flex-col gap-10 px-6 py-24 md:py-32">
-          <p className="text-xs uppercase tracking-[0.35em] text-accent">
+      <section className="border-b border-border">
+        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-8 py-28 md:gap-14 md:px-10 md:py-40">
+          <p className="text-[0.65rem] uppercase tracking-[0.4em] text-accent">
             {salon.tagline}
           </p>
-          <h1 className="max-w-3xl font-display text-5xl leading-tight text-foreground md:text-7xl">
+          <h1 className="max-w-3xl font-display text-5xl leading-[1.1] text-foreground md:text-7xl md:leading-[1.08]">
             {salon.name}
           </h1>
-          <p className="text-lg uppercase tracking-[0.2em] text-muted">
+          <p className="text-sm uppercase tracking-[0.25em] text-muted">
             {salon.byline}
           </p>
-          <p className="max-w-xl text-lg leading-relaxed text-muted">
+          <p className="max-w-lg text-base leading-relaxed text-muted md:text-lg">
             {salon.description}
           </p>
-          <div className="flex flex-wrap gap-4 pt-4">
+          <div className="flex flex-wrap gap-5 pt-6">
             <Link
               href="/rezervari"
-              className="border border-accent bg-accent px-8 py-4 text-xs uppercase tracking-[0.2em] text-background transition-opacity hover:opacity-90"
+              className="border border-foreground bg-foreground px-10 py-4 text-[0.65rem] uppercase tracking-[0.22em] text-background transition-opacity hover:opacity-85"
             >
               Rezervă o programare
             </Link>
             <Link
               href="/servicii"
-              className="border border-border px-8 py-4 text-xs uppercase tracking-[0.2em] text-foreground transition-colors hover:border-accent hover:text-accent"
+              className="border border-border-strong px-10 py-4 text-[0.65rem] uppercase tracking-[0.22em] text-foreground transition-colors hover:border-accent hover:text-accent"
             >
               Vezi serviciile
             </Link>
@@ -36,23 +35,23 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <div className="grid gap-16 md:grid-cols-2">
+      <section className="mx-auto max-w-6xl px-8 py-28 md:px-10 md:py-36">
+        <div className="grid gap-20 md:grid-cols-2 md:gap-24">
           <div>
-            <h2 className="font-display text-4xl text-foreground">
+            <h2 className="font-display text-4xl leading-snug text-foreground md:text-5xl">
               Arta culorii, în mâinile tale
             </h2>
-            <p className="mt-6 leading-relaxed text-muted">
+            <p className="mt-8 leading-relaxed text-muted">
               Sunt Cristina Barbu, colorist cu pasiune pentru balayage și
               transformări naturale. Fiecare clientă primește o consultație
               personalizată — pentru că frumusețea ta merită o abordare unică.
             </p>
-            <p className="mt-4 leading-relaxed text-muted">
+            <p className="mt-6 leading-relaxed text-muted">
               Lucrez exclusiv cu produse profesionale și tehnici moderne, pentru
               rezultate care arată bine atât în salon, cât și săptămâni după.
             </p>
           </div>
-          <div className="grid gap-6">
+          <div className="grid gap-5">
             {[
               {
                 title: "Balayage & Color",
@@ -67,12 +66,11 @@ export default function HomePage() {
                 text: "Atmosferă elegantă, atenție la detalii, rezultate impecabile.",
               },
             ].map((item) => (
-              <div
-                key={item.title}
-                className="border border-border/60 bg-surface p-6"
-              >
-                <h3 className="font-display text-xl text-accent">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
+              <div key={item.title} className="glass-card p-8 md:p-9">
+                <h3 className="font-display text-2xl text-foreground">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted">
                   {item.text}
                 </p>
               </div>
@@ -81,18 +79,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-border/60 bg-surface">
-        <div className="mx-auto max-w-6xl px-6 py-24 text-center">
-          <h2 className="font-display text-4xl text-foreground">
+      <section className="border-t border-border bg-background-subtle/40">
+        <div className="mx-auto max-w-6xl px-8 py-28 text-center md:px-10 md:py-36">
+          <h2 className="font-display text-4xl text-foreground md:text-5xl">
             Gata pentru o transformare?
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-muted">
+          <p className="mx-auto mt-6 max-w-md leading-relaxed text-muted">
             Alege ziua și intervalul care ți se potrivește — direct online, în
             câteva minute.
           </p>
           <Link
             href="/rezervari"
-            className="mt-8 inline-block border border-accent px-10 py-4 text-xs uppercase tracking-[0.2em] text-accent transition-colors hover:bg-accent hover:text-background"
+            className="mt-12 inline-block border border-foreground px-12 py-4 text-[0.65rem] uppercase tracking-[0.22em] text-foreground transition-colors hover:bg-foreground hover:text-background"
           >
             Rezervă acum
           </Link>

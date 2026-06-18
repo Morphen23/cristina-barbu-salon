@@ -1,5 +1,10 @@
 import { promises as fs } from "fs";
 import path from "path";
+import {
+  isBlobConfigured,
+  readBlobBlockedDays,
+  writeBlobBlockedDays,
+} from "./blob-storage";
 import { getDataDir } from "./data-dir";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase-server";
 
@@ -46,6 +51,21 @@ async function saveAllToFile(days: BlockedDay[]): Promise<void> {
   await fs.writeFile(BLOCKED_FILE, JSON.stringify(days, null, 2), "utf-8");
 }
 
+async function getAllFromStore(): Promise<BlockedDay[]> {
+  if (isBlobConfigured()) {
+    return readBlobBlockedDays<BlockedDay[]>([]);
+  }
+  return getAllFromFile();
+}
+
+async function saveAllToStore(days: BlockedDay[]): Promise<void> {
+  if (isBlobConfigured()) {
+    await writeBlobBlockedDays(days);
+    return;
+  }
+  await saveAllToFile(days);
+}
+
 export async function getAllBlockedDays(): Promise<BlockedDay[]> {
   if (isSupabaseConfigured()) {
     const { data, error } = await getSupabaseAdmin()
@@ -57,7 +77,7 @@ export async function getAllBlockedDays(): Promise<BlockedDay[]> {
     return (data as BlockedDayRow[]).map(rowToBlockedDay);
   }
 
-  const all = await getAllFromFile();
+  const all = await getAllFromStore();
   return all.sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -86,11 +106,11 @@ export async function blockDay(
     return rowToBlockedDay(data as BlockedDayRow);
   }
 
-  const all = await getAllFromFile();
+  const all = await getAllFromStore();
   const existing = all.find((d) => d.date === date);
   if (existing) {
     existing.reason = reason;
-    await saveAllToFile(all);
+    await saveAllToStore(all);
     return existing;
   }
 
@@ -100,7 +120,7 @@ export async function blockDay(
     createdAt: new Date().toISOString(),
   };
   all.push(day);
-  await saveAllToFile(all);
+  await saveAllToStore(all);
   return day;
 }
 
@@ -115,9 +135,9 @@ export async function unblockDay(date: string): Promise<boolean> {
     return (count ?? 0) > 0;
   }
 
-  const all = await getAllFromFile();
+  const all = await getAllFromStore();
   const next = all.filter((d) => d.date !== date);
   if (next.length === all.length) return false;
-  await saveAllToFile(next);
+  await saveAllToStore(next);
   return true;
 }

@@ -45,7 +45,7 @@ export default function AdminApp() {
   const [blockReason, setBlockReason] = useState("");
   const [selectedBlockDate, setSelectedBlockDate] = useState<string | null>(null);
   const [blocking, setBlocking] = useState(false);
-  const [dbStatus, setDbStatus] = useState<"supabase" | "local" | null>(null);
+  const [dbStatus, setDbStatus] = useState<"supabase" | "blob" | "local" | null>(null);
 
   const blockedSet = useMemo(
     () => new Set(blockedDays.map((d) => d.date)),
@@ -93,7 +93,13 @@ export default function AdminApp() {
 
       if (statusRes.ok) {
         const statusData = await statusRes.json();
-        setDbStatus(statusData.database === "supabase" ? "supabase" : "local");
+        setDbStatus(
+          statusData.database === "supabase"
+            ? "supabase"
+            : statusData.database === "blob"
+              ? "blob"
+              : "local",
+        );
       }
     } catch {
       setActionError("Eroare la încărcarea datelor.");
@@ -343,9 +349,8 @@ export default function AdminApp() {
 
       {dbStatus === "local" && (
         <p className="mt-4 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Baza de date nu este configurată pe server. Rezervările și zilele
-          blocate pot dispărea. Contactează dezvoltatorul pentru activarea
-          Supabase.
+          Stocarea datelor nu este configurată pe server. Rezervările și zilele
+          blocate pot dispărea.
         </p>
       )}
 

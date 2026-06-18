@@ -1,6 +1,11 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { BalayageOptions } from "./balayage";
+import {
+  isBlobConfigured,
+  readBlobBookings,
+  writeBlobBookings,
+} from "./blob-storage";
 import { getDataDir } from "./data-dir";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase-server";
 
@@ -48,6 +53,13 @@ function rowToBooking(row: BookingRow): Booking {
   };
 }
 
+function sortBookings(all: Booking[]): Booking[] {
+  return all.sort((a, b) => {
+    const byDate = a.date.localeCompare(b.date);
+    return byDate !== 0 ? byDate : a.time.localeCompare(b.time);
+  });
+}
+
 async function ensureDataFile(): Promise<void> {
   await fs.mkdir(DATA_DIR, { recursive: true });
   try {
@@ -68,6 +80,21 @@ async function saveAllBookingsToFile(bookings: Booking[]): Promise<void> {
   await fs.writeFile(BOOKINGS_FILE, JSON.stringify(bookings, null, 2), "utf-8");
 }
 
+async function getAllBookingsFromStore(): Promise<Booking[]> {
+  if (isBlobConfigured()) {
+    return readBlobBookings<Booking[]>([]);
+  }
+  return getAllBookingsFromFile();
+}
+
+async function saveAllBookingsToStore(bookings: Booking[]): Promise<void> {
+  if (isBlobConfigured()) {
+    await writeBlobBookings(bookings);
+    return;
+  }
+  await saveAllBookingsToFile(bookings);
+}
+
 export async function getAllBookings(): Promise<Booking[]> {
   if (isSupabaseConfigured()) {
     const { data, error } = await getSupabaseAdmin()
@@ -80,11 +107,7 @@ export async function getAllBookings(): Promise<Booking[]> {
     return (data as BookingRow[]).map(rowToBooking);
   }
 
-  const all = await getAllBookingsFromFile();
-  return all.sort((a, b) => {
-    const byDate = a.date.localeCompare(b.date);
-    return byDate !== 0 ? byDate : a.time.localeCompare(b.time);
-  });
+  return sortBookings(await getAllBookingsFromStore());
 }
 
 export async function getBookingsForDate(date: string): Promise<Booking[]> {
@@ -99,7 +122,7 @@ export async function getBookingsForDate(date: string): Promise<Booking[]> {
     return (data as BookingRow[]).map(rowToBooking);
   }
 
-  const all = await getAllBookingsFromFile();
+  const all = await getAllBookingsFromStore();
   return all.filter((b) => b.date === date);
 }
 
@@ -126,14 +149,14 @@ export async function createBooking(
     return rowToBooking(row as BookingRow);
   }
 
-  const all = await getAllBookingsFromFile();
+  const all = await getAllBookingsFromStore();
   const booking: Booking = {
     ...data,
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
   };
   all.push(booking);
-  await saveAllBookingsToFile(all);
+  await saveAllBookingsToStore(all);
   return booking;
 }
 
@@ -148,9 +171,9 @@ export async function deleteBooking(id: string): Promise<boolean> {
     return (count ?? 0) > 0;
   }
 
-  const all = await getAllBookingsFromFile();
+  const all = await getAllBookingsFromStore();
   const next = all.filter((b) => b.id !== id);
   if (next.length === all.length) return false;
-  await saveAllBookingsToFile(next);
+  await saveAllBookingsToStore(next);
   return true;
 }

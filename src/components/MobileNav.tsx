@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const links = [
   { href: "/", label: "Acasă" },
@@ -12,7 +13,12 @@ const links = [
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setOpen(false);
@@ -25,14 +31,54 @@ export default function MobileNav() {
     };
   }, [open]);
 
+  const menuPanel =
+    open && mounted
+      ? createPortal(
+          <div className="fixed inset-0 z-[200] md:hidden" role="dialog" aria-modal="true">
+            <button
+              type="button"
+              aria-label="Închide meniul"
+              className="absolute inset-0 bg-background"
+              onClick={() => setOpen(false)}
+            />
+            <nav className="relative z-[201] flex h-full flex-col bg-background px-5 pb-8 pt-[calc(env(safe-area-inset-top)+5.25rem)]">
+              <div className="flex flex-col gap-0">
+                {links.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className={`block border-b border-border py-4 text-base leading-snug ${
+                      pathname === link.href
+                        ? "font-medium text-foreground"
+                        : "text-muted"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+              <Link
+                href="/rezervari"
+                onClick={() => setOpen(false)}
+                className="btn-premium mt-8 block border border-foreground bg-foreground py-4 text-center text-[0.65rem] uppercase tracking-[0.18em] text-background"
+              >
+                Rezervă acum
+              </Link>
+            </nav>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
-    <div className="md:hidden">
+    <>
       <button
         type="button"
         aria-expanded={open}
         aria-label={open ? "Închide meniul" : "Deschide meniul"}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-11 w-11 items-center justify-center border border-border-strong text-foreground"
+        className="relative z-[210] flex h-11 w-11 items-center justify-center border border-border-strong bg-background text-foreground md:hidden"
       >
         <span className="sr-only">Meniu</span>
         <span className="flex flex-col gap-1.5">
@@ -53,30 +99,7 @@ export default function MobileNav() {
           />
         </span>
       </button>
-
-      {open && (
-        <div className="fixed inset-0 top-[73px] z-40 bg-[rgba(248,246,243,0.97)] backdrop-blur-xl">
-          <nav className="flex flex-col gap-1 px-5 py-6">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`border-b border-border py-4 text-sm uppercase tracking-[0.2em] ${
-                  pathname === link.href ? "text-foreground" : "text-muted"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              href="/rezervari"
-              className="btn-premium mt-6 border border-foreground bg-foreground py-4 text-center text-[0.65rem] uppercase tracking-[0.22em] text-background"
-            >
-              Rezervă acum
-            </Link>
-          </nav>
-        </div>
-      )}
-    </div>
+      {menuPanel}
+    </>
   );
 }

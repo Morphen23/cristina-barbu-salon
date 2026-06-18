@@ -10,7 +10,7 @@ const links = [
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-[rgba(248,246,243,0.92)] backdrop-blur-xl pt-[env(safe-area-inset-top)]">
+    <header className="sticky top-0 z-[100] border-b border-border bg-background pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-8 md:px-10 md:py-7">
         <Link href="/" className="group min-w-0 flex-1">
           <p className="truncate font-display text-xl tracking-wide text-foreground transition-colors group-hover:text-accent sm:text-2xl">

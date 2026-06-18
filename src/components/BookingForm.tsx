@@ -633,7 +633,7 @@ export default function BookingForm() {
       </div>
 
       {step !== "contact" && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[rgba(248,246,243,0.96)] px-4 py-3 backdrop-blur-xl pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:mt-10 md:border-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-none">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:mt-10 md:border-0 md:bg-transparent md:px-0 md:py-0">
           <div className="mx-auto flex max-w-5xl items-center gap-3">
             {stepIndex > 0 ? (
               <button

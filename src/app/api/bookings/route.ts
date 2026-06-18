@@ -5,8 +5,10 @@ import {
   isBalayageOptionsComplete,
 } from "@/lib/balayage";
 import { createBooking, getBookingsForDate } from "@/lib/bookings";
+import { isDateBlocked } from "@/lib/blocked-days";
 import { resolveBookingDuration, resolveServiceDuration } from "@/lib/duration";
 import { getServiceById } from "@/lib/config";
+import { sendBookingNotification } from "@/lib/email";
 import { generateSlotsForDate, parseDateKey } from "@/lib/slots";
 
 function parseBalayageOptions(body: Record<string, unknown>): BalayageOptions | undefined {
@@ -57,6 +59,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Durată invalidă." }, { status: 400 });
   }
 
+  if (await isDateBlocked(date)) {
+    return NextResponse.json(
+      { error: "Ziua selectată nu este disponibilă pentru rezervări." },
+      { status: 409 },
+    );
+  }
+
   const bookings = await getBookingsForDate(date);
   const occupied = bookings.map((b) => ({
     start: b.time,
@@ -87,6 +96,8 @@ export async function POST(request: NextRequest) {
     clientPhone: String(clientPhone).trim(),
     clientEmail: String(clientEmail || "").trim(),
   });
+
+  void sendBookingNotification(booking);
 
   return NextResponse.json({ booking }, { status: 201 });
 }

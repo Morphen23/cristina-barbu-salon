@@ -7,6 +7,7 @@ import {
   isBalayageOptionsComplete,
 } from "@/lib/balayage";
 import { getBookingsForDate } from "@/lib/bookings";
+import { isDateBlocked } from "@/lib/blocked-days";
 import { resolveBookingDuration, resolveServiceDuration } from "@/lib/duration";
 import { getServiceById } from "@/lib/config";
 import { generateSlotsForDate, parseDateKey } from "@/lib/slots";
@@ -53,6 +54,15 @@ export async function GET(request: NextRequest) {
   const durationMinutes = resolveServiceDuration(serviceId, balayageOptions);
   if (durationMinutes === null) {
     return NextResponse.json({ error: "Durată invalidă." }, { status: 400 });
+  }
+
+  if (await isDateBlocked(date)) {
+    return NextResponse.json({
+      slots: [],
+      durationMinutes,
+      durationLabel: formatDuration(durationMinutes),
+      blocked: true,
+    });
   }
 
   const bookings = await getBookingsForDate(date);

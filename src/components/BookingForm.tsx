@@ -16,7 +16,7 @@ import {
 } from "@/lib/balayage";
 import { stylists } from "@/lib/booking-ui";
 import { services, type Service } from "@/lib/config";
-import { getBookableDates, toDateKey, type TimeSlot } from "@/lib/slots";
+import { parseDateKey, toDateKey, type TimeSlot } from "@/lib/slots";
 
 type SlotWithEnd = TimeSlot & { endTime?: string };
 type StepId = "service" | "details" | "stylist" | "schedule" | "contact";
@@ -76,7 +76,9 @@ const stepLabels: Record<StepId, string> = {
 
 export default function BookingForm() {
   const searchParams = useSearchParams();
-  const bookableDates = getBookableDates();
+
+  const [bookableDates, setBookableDates] = useState<Date[]>([]);
+  const [datesLoading, setDatesLoading] = useState(true);
 
   const [step, setStep] = useState<StepId>("service");
   const [direction, setDirection] = useState<StepDirection>("forward");
@@ -85,9 +87,7 @@ export default function BookingForm() {
   const [balayage, setBalayage] = useState<Partial<BalayageOptions>>(defaultBalayage);
   const [hairColorSelect, setHairColorSelect] = useState("");
   const [customHairColor, setCustomHairColor] = useState("");
-  const [selectedDate, setSelectedDate] = useState(
-    toDateKey(bookableDates[0] ?? new Date()),
-  );
+  const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotWithEnd[]>([]);
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
@@ -104,6 +104,32 @@ export default function BookingForm() {
       setServiceId("balayage");
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDates() {
+      try {
+        const res = await fetch("/api/bookable-dates");
+        const data = await res.json();
+        if (cancelled) return;
+
+        const dates = ((data.dates as string[]) ?? []).map(parseDateKey);
+        setBookableDates(dates);
+        setSelectedDate((prev) => {
+          if (prev && dates.some((d) => toDateKey(d) === prev)) return prev;
+          return dates[0] ? toDateKey(dates[0]) : "";
+        });
+      } finally {
+        if (!cancelled) setDatesLoading(false);
+      }
+    }
+
+    void loadDates();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const isBalayage = serviceId === "balayage";
   const balayageComplete = isBalayageOptionsComplete(balayage);
@@ -484,7 +510,14 @@ export default function BookingForm() {
                     Ziua
                   </p>
                   <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 sm:gap-3">
-                    {bookableDates.slice(0, 14).map((date) => {
+                    {datesLoading ? (
+                      <p className="px-1 text-sm text-muted">Se încarcă zilele disponibile...</p>
+                    ) : bookableDates.length === 0 ? (
+                      <p className="px-1 text-sm text-muted">
+                        Nu există zile disponibile momentan. Contactează salonul direct.
+                      </p>
+                    ) : (
+                      bookableDates.slice(0, 14).map((date) => {
                       const key = toDateKey(date);
                       return (
                         <button
@@ -502,7 +535,8 @@ export default function BookingForm() {
                           <span className="hidden sm:inline">{formatDateLabel(date)}</span>
                         </button>
                       );
-                    })}
+                    })
+                    )}
                   </div>
                 </div>
 

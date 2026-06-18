@@ -16,13 +16,21 @@ La `/admin` poți:
 
 ### Configurare (obligatoriu pentru producție)
 
-#### 1. Supabase (bază de date gratuită)
+#### Supabase (automat prin Vercel)
+
+Integrarea Supabase este conectată la proiectul Vercel. Variabilele `SUPABASE_URL` și `SUPABASE_SERVICE_ROLE_KEY` sunt setate automat.
+
+Pentru tabele noi, rulează local:
+
+```bash
+npm run db:schema
+```
+
+#### Manual (dacă nu folosești integrarea Vercel)
 
 1. Creează cont pe [supabase.com](https://supabase.com)
 2. Proiect nou → **SQL Editor** → lipește conținutul din `supabase/schema.sql` → **Run**
-3. **Settings → API** → copiază:
-   - `Project URL` → `SUPABASE_URL`
-   - `service_role` key (secret!) → `SUPABASE_SERVICE_ROLE_KEY`
+3. **Settings → API** → copiază URL și cheia `service_role`
 
 #### 2. Variabile de mediu
 

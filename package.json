@@ -7,7 +7,9 @@
     "dev:lan": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:schema": "node scripts/apply-schema.cjs",
+    "db:migrate-blob": "node scripts/migrate-blob-to-supabase.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
@@ -23,6 +25,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "pg": "^8.21.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

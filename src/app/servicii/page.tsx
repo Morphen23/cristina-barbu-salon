@@ -17,7 +17,7 @@ export default function ServiciiPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-6xl px-8 py-20 md:px-10 md:py-28">
+    <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 md:px-10 md:py-28">
       <div className="mb-20 max-w-2xl md:mb-28">
         <p className="text-[0.65rem] uppercase tracking-[0.4em] text-accent">
           Servicii & Prețuri

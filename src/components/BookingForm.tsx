@@ -296,7 +296,7 @@ export default function BookingForm() {
                   key={service.id}
                   type="button"
                   onClick={() => handleServiceSelect(service.id)}
-                  className={`glass-card glass-card-interactive flex w-full items-center justify-between gap-6 p-5 text-left md:p-6 ${
+                  className={`glass-card glass-card-interactive flex w-full flex-col items-start gap-3 p-5 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-6 md:p-6 ${
                     serviceId === service.id ? "glass-slot-selected" : ""
                   }`}
                 >
@@ -647,7 +647,7 @@ export default function BookingForm() {
             type="button"
             onClick={goNext}
             disabled={!canContinue()}
-            className="btn-premium border border-foreground bg-foreground px-10 py-3.5 text-[0.65rem] uppercase tracking-[0.22em] text-background disabled:cursor-not-allowed disabled:opacity-40"
+            className="btn-premium w-full border border-foreground bg-foreground px-8 py-3.5 text-[0.65rem] uppercase tracking-[0.22em] text-background disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:px-10"
           >
             Continuă →
           </button>

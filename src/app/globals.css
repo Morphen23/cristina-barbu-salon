@@ -83,6 +83,11 @@
   animation-delay: 0.42s;
 }
 
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background: linear-gradient(180deg, #faf9f7 0%, var(--background) 40%, #f3f0ea 100%);
   background-attachment: fixed;
@@ -91,6 +96,23 @@ body {
   font-weight: 400;
   letter-spacing: 0.012em;
   line-height: 1.75;
+  min-width: 0;
+}
+
+input,
+select,
+textarea,
+button {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  input,
+  select,
+  textarea,
+  button {
+    font-size: inherit;
+  }
 }
 
 h1,

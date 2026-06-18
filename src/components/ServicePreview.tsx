@@ -24,7 +24,7 @@ export default function ServicePreview({
     <aside
       className={`glass-card overflow-hidden ${compact ? "" : "lg:sticky lg:top-28"}`}
     >
-      <div className={`relative w-full ${compact ? "aspect-[4/3]" : "aspect-[3/4] max-h-[420px]"}`}>
+      <div className={`relative w-full ${compact ? "aspect-[16/10] sm:aspect-[4/3]" : "aspect-[16/10] sm:aspect-[3/4] sm:max-h-[420px]"}`}>
         <Image
           src={visual.image}
           alt={visual.caption}

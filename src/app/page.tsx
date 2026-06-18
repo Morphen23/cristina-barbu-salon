@@ -5,11 +5,11 @@ export default function HomePage() {
   return (
     <>
       <section className="border-b border-border">
-        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-8 py-28 md:gap-14 md:px-10 md:py-40">
-          <p className="text-[0.65rem] uppercase tracking-[0.4em] text-accent">
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5 py-20 sm:px-8 sm:py-28 md:gap-14 md:px-10 md:py-40">
+          <p className="text-[0.6rem] uppercase tracking-[0.3em] text-accent sm:text-[0.65rem] sm:tracking-[0.4em]">
             {salon.tagline}
           </p>
-          <h1 className="max-w-3xl font-display text-5xl leading-[1.1] text-foreground md:text-7xl md:leading-[1.08]">
+          <h1 className="max-w-3xl font-display text-4xl leading-[1.12] text-foreground sm:text-5xl md:text-7xl md:leading-[1.08]">
             {salon.name}
           </h1>
           <p className="text-sm uppercase tracking-[0.25em] text-muted">
@@ -18,16 +18,16 @@ export default function HomePage() {
           <p className="max-w-lg text-base leading-relaxed text-muted md:text-lg">
             {salon.description}
           </p>
-          <div className="flex flex-wrap gap-5 pt-6">
+          <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:flex-wrap sm:gap-5 sm:pt-6">
             <Link
               href="/rezervari"
-              className="border border-foreground bg-foreground px-10 py-4 text-[0.65rem] uppercase tracking-[0.22em] text-background transition-opacity hover:opacity-85"
+              className="btn-premium w-full border border-foreground bg-foreground px-8 py-4 text-center text-[0.65rem] uppercase tracking-[0.22em] text-background sm:w-auto sm:px-10"
             >
               Rezervă o programare
             </Link>
             <Link
               href="/servicii"
-              className="border border-border-strong px-10 py-4 text-[0.65rem] uppercase tracking-[0.22em] text-foreground transition-colors hover:border-accent hover:text-accent"
+              className="btn-premium w-full border border-border-strong px-8 py-4 text-center text-[0.65rem] uppercase tracking-[0.22em] text-foreground sm:w-auto sm:px-10"
             >
               Vezi serviciile
             </Link>
@@ -35,7 +35,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-8 py-28 md:px-10 md:py-36">
+      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28 md:px-10 md:py-36">
         <div className="grid gap-20 md:grid-cols-2 md:gap-24">
           <div>
             <h2 className="font-display text-4xl leading-snug text-foreground md:text-5xl">

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Lato } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -23,6 +23,14 @@ export const metadata: Metadata = {
   description: salon.description,
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#f8f6f3",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ro" className={`${cormorant.variable} ${lato.variable} h-full`}>
-      <body className="flex min-h-full flex-col antialiased font-sans">
+      <body className="flex min-h-full flex-col overflow-x-hidden antialiased font-sans pb-[env(safe-area-inset-bottom)]">
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

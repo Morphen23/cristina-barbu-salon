@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
-import { getBookableDatesAsync } from "@/lib/slots-server";
-import { toDateKey } from "@/lib/slots";
+import { getBlockedDateSet } from "@/lib/blocked-days";
+import { getBookableDates, toDateKey } from "@/lib/slots";
 
 export async function GET() {
-  const dates = await getBookableDatesAsync();
+  const blocked = await getBlockedDateSet();
+  const dates = getBookableDates().filter(
+    (date) => !blocked.has(toDateKey(date)),
+  );
+
   return NextResponse.json({
     dates: dates.map((date) => toDateKey(date)),
   });

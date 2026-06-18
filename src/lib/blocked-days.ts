@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { getDataDir } from "./data-dir";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase-server";
 
 export type BlockedDay = {
@@ -14,7 +15,7 @@ type BlockedDayRow = {
   created_at: string;
 };
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = getDataDir();
 const BLOCKED_FILE = path.join(DATA_DIR, "blocked-days.json");
 
 function rowToBlockedDay(row: BlockedDayRow): BlockedDay {

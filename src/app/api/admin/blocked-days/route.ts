@@ -11,8 +11,16 @@ export async function GET() {
     return NextResponse.json({ error: "Neautorizat." }, { status: 401 });
   }
 
-  const blockedDays = await getAllBlockedDays();
-  return NextResponse.json({ blockedDays });
+  try {
+    const blockedDays = await getAllBlockedDays();
+    return NextResponse.json({ blockedDays });
+  } catch (error) {
+    console.error("blocked-days GET:", error);
+    return NextResponse.json(
+      { error: "Nu s-au putut încărca zilele blocate." },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -20,16 +28,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Neautorizat." }, { status: 401 });
   }
 
-  const body = await request.json();
-  const date = typeof body.date === "string" ? body.date : "";
-  const reason = typeof body.reason === "string" ? body.reason.trim() : undefined;
+  try {
+    const body = await request.json();
+    const date = typeof body.date === "string" ? body.date : "";
+    const reason =
+      typeof body.reason === "string" ? body.reason.trim() : undefined;
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return NextResponse.json({ error: "Dată invalidă." }, { status: 400 });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return NextResponse.json({ error: "Dată invalidă." }, { status: 400 });
+    }
+
+    const blockedDay = await blockDay(date, reason || undefined);
+    return NextResponse.json({ blockedDay }, { status: 201 });
+  } catch (error) {
+    console.error("blocked-days POST:", error);
+    return NextResponse.json(
+      { error: "Nu s-a putut salva ziua blocată. Verifică baza de date Supabase." },
+      { status: 500 },
+    );
   }
-
-  const blockedDay = await blockDay(date, reason || undefined);
-  return NextResponse.json({ blockedDay }, { status: 201 });
 }
 
 export async function DELETE(request: NextRequest) {
@@ -37,15 +54,23 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Neautorizat." }, { status: 401 });
   }
 
-  const date = request.nextUrl.searchParams.get("date");
-  if (!date) {
-    return NextResponse.json({ error: "Dată lipsă." }, { status: 400 });
-  }
+  try {
+    const date = request.nextUrl.searchParams.get("date");
+    if (!date) {
+      return NextResponse.json({ error: "Dată lipsă." }, { status: 400 });
+    }
 
-  const removed = await unblockDay(date);
-  if (!removed) {
-    return NextResponse.json({ error: "Ziua nu era blocată." }, { status: 404 });
-  }
+    const removed = await unblockDay(date);
+    if (!removed) {
+      return NextResponse.json({ error: "Ziua nu era blocată." }, { status: 404 });
+    }
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("blocked-days DELETE:", error);
+    return NextResponse.json(
+      { error: "Nu s-a putut debloca ziua." },
+      { status: 500 },
+    );
+  }
 }

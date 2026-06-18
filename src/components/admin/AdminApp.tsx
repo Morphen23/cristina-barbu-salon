@@ -44,6 +44,8 @@ export default function AdminApp() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [selectedBlockDate, setSelectedBlockDate] = useState<string | null>(null);
+  const [blocking, setBlocking] = useState(false);
+  const [dbStatus, setDbStatus] = useState<"supabase" | "local" | null>(null);
 
   const blockedSet = useMemo(
     () => new Set(blockedDays.map((d) => d.date)),
@@ -69,9 +71,10 @@ export default function AdminApp() {
     setLoading(true);
     setActionError(null);
     try {
-      const [bookingsRes, blockedRes] = await Promise.all([
+      const [bookingsRes, blockedRes, statusRes] = await Promise.all([
         fetch("/api/admin/bookings"),
         fetch("/api/admin/blocked-days"),
+        fetch("/api/admin/status"),
       ]);
 
       if (bookingsRes.status === 401 || blockedRes.status === 401) {
@@ -87,6 +90,11 @@ export default function AdminApp() {
       const blockedData = await blockedRes.json();
       setBookings(bookingsData.bookings ?? []);
       setBlockedDays(blockedData.blockedDays ?? []);
+
+      if (statusRes.ok) {
+        const statusData = await statusRes.json();
+        setDbStatus(statusData.database === "supabase" ? "supabase" : "local");
+      }
     } catch {
       setActionError("Eroare la încărcarea datelor.");
     } finally {
@@ -173,28 +181,46 @@ export default function AdminApp() {
   }
 
   async function confirmBlockDay() {
-    if (!selectedBlockDate) return;
+    if (!selectedBlockDate || blocking) return;
 
-    const res = await fetch("/api/admin/blocked-days", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        date: selectedBlockDate,
-        reason: blockReason.trim() || undefined,
-      }),
-    });
+    setBlocking(true);
+    setActionError(null);
 
-    if (!res.ok) {
-      setActionError("Nu s-a putut bloca ziua.");
-      return;
+    try {
+      const res = await fetch("/api/admin/blocked-days", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: selectedBlockDate,
+          reason: blockReason.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setActionError(
+          typeof data.error === "string"
+            ? data.error
+            : "Nu s-a putut bloca ziua.",
+        );
+        return;
+      }
+
+      setBlockedDays((prev) => {
+        const next = prev.filter((d) => d.date !== selectedBlockDate);
+        next.push(data.blockedDay);
+        return next.sort((a, b) => a.date.localeCompare(b.date));
+      });
+      setSelectedBlockDate(null);
+      setBlockReason("");
+    } finally {
+      setBlocking(false);
     }
+  }
 
-    const data = await res.json();
-    setBlockedDays((prev) => {
-      const next = prev.filter((d) => d.date !== selectedBlockDate);
-      next.push(data.blockedDay);
-      return next.sort((a, b) => a.date.localeCompare(b.date));
-    });
+  function closeBlockModal() {
+    if (blocking) return;
     setSelectedBlockDate(null);
     setBlockReason("");
   }
@@ -315,6 +341,14 @@ export default function AdminApp() {
         <p className="mt-4 text-sm text-red-700">{actionError}</p>
       )}
 
+      {dbStatus === "local" && (
+        <p className="mt-4 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Baza de date nu este configurată pe server. Rezervările și zilele
+          blocate pot dispărea. Contactează dezvoltatorul pentru activarea
+          Supabase.
+        </p>
+      )}
+
       {loading ? (
         <p className="mt-8 text-sm text-muted">Se încarcă...</p>
       ) : tab === "bookings" ? (
@@ -426,35 +460,46 @@ export default function AdminApp() {
           </div>
 
           {selectedBlockDate && (
-            <div className="mt-8 border border-border p-5">
-              <p className="font-display text-lg text-foreground">
-                Blochezi {formatBookingDate(selectedBlockDate)}?
-              </p>
-              <input
-                type="text"
-                value={blockReason}
-                onChange={(e) => setBlockReason(e.target.value)}
-                placeholder="Motiv (opțional): concediu, training..."
-                className="mt-4 w-full border border-border-strong bg-background px-4 py-3 text-sm"
-              />
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => void confirmBlockDay()}
-                  className="border border-foreground bg-foreground px-5 py-2.5 text-[0.65rem] uppercase tracking-[0.18em] text-background"
-                >
-                  Confirmă blocarea
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedBlockDate(null);
-                    setBlockReason("");
-                  }}
-                  className="border border-border-strong px-5 py-2.5 text-[0.65rem] uppercase tracking-[0.18em] text-muted"
-                >
-                  Renunță
-                </button>
+            <div
+              className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+              onClick={closeBlockModal}
+              role="presentation"
+            >
+              <div
+                className="w-full max-w-md border border-border bg-background p-5 shadow-lg"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="block-day-title"
+              >
+                <p id="block-day-title" className="font-display text-lg text-foreground">
+                  Blochezi {formatBookingDate(selectedBlockDate)}?
+                </p>
+                <input
+                  type="text"
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                  placeholder="Motiv (opțional): concediu, training..."
+                  className="mt-4 w-full border border-border-strong bg-background px-4 py-3 text-base"
+                />
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => void confirmBlockDay()}
+                    disabled={blocking}
+                    className="min-h-[48px] flex-1 touch-manipulation border border-foreground bg-foreground px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-background disabled:opacity-60"
+                  >
+                    {blocking ? "Se salvează..." : "Confirmă blocarea"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeBlockModal}
+                    disabled={blocking}
+                    className="min-h-[48px] flex-1 touch-manipulation border border-border-strong px-5 py-3 text-sm uppercase tracking-[0.12em] text-muted disabled:opacity-60"
+                  >
+                    Renunță
+                  </button>
+                </div>
               </div>
             </div>
           )}

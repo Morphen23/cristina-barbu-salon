@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Lato } from "next/font/google";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { salon } from "@/lib/config";
 import "./globals.css";
 
@@ -39,9 +37,7 @@ export default function RootLayout({
   return (
     <html lang="ro" className={`${cormorant.variable} ${lato.variable} h-full overflow-x-hidden`}>
       <body className="flex min-h-full w-full max-w-[100vw] flex-col overflow-x-hidden antialiased font-sans pb-[env(safe-area-inset-bottom)]">
-        <Header />
-        <main className="w-full min-w-0 flex-1">{children}</main>
-        <Footer />
+        {children}
       </body>
     </html>
   );

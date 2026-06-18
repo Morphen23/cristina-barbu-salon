@@ -32,7 +32,8 @@ Copiază `.env.example` în `.env.local` (local) și adaugă aceleași variabile
 |-----------|-----------|
 | `SUPABASE_URL` | URL proiect Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Cheie service role (secret) |
-| `ADMIN_PASSWORD` | Parola ta pentru `/admin` |
+| `ADMIN_USERNAME` | Utilizator pentru `/admin` |
+| `ADMIN_PASSWORD` | Parola pentru `/admin` |
 | `SALON_NOTIFY_EMAIL` | Email unde primești rezervările |
 | `RESEND_API_KEY` | Cheie API de la [resend.com](https://resend.com) (opțional) |
 | `RESEND_FROM_EMAIL` | Expeditor verificat în Resend (opțional) |

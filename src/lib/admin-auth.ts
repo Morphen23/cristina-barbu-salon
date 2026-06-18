@@ -9,7 +9,7 @@ function getSessionSecret(): string {
     process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD;
   if (!secret) {
     throw new Error(
-      "Setează ADMIN_PASSWORD (și opțional ADMIN_SESSION_SECRET) în variabilele de mediu.",
+      "Setează ADMIN_USERNAME și ADMIN_PASSWORD în variabilele de mediu.",
     );
   }
   return secret;
@@ -56,18 +56,31 @@ export function verifySessionToken(token: string | undefined): boolean {
   }
 }
 
-export function verifyAdminPassword(password: string): boolean {
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) return false;
-
+function safeEqual(a: string, b: string): boolean {
   try {
-    const a = Buffer.from(password);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
+    const bufA = Buffer.from(a);
+    const bufB = Buffer.from(b);
+    if (bufA.length !== bufB.length) return false;
+    return timingSafeEqual(bufA, bufB);
   } catch {
     return false;
   }
+}
+
+export function verifyAdminCredentials(
+  username: string,
+  password: string,
+): boolean {
+  const expectedUser = process.env.ADMIN_USERNAME;
+  const expectedPassword = process.env.ADMIN_PASSWORD;
+
+  if (!expectedUser || !expectedPassword) return false;
+
+  return safeEqual(username.trim(), expectedUser) && safeEqual(password, expectedPassword);
+}
+
+export function isAdminAuthConfigured(): boolean {
+  return !!(process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD);
 }
 
 export async function isAdminAuthenticated(): Promise<boolean> {

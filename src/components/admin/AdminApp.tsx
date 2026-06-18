@@ -33,6 +33,7 @@ function groupBookingsByDate(bookings: Booking[]): Map<string, Booking[]> {
 
 export default function AdminApp() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
@@ -109,16 +110,22 @@ export default function AdminApp() {
     const res = await fetch("/api/admin/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ username, password }),
     });
 
     setLoggingIn(false);
 
     if (!res.ok) {
-      setLoginError("Parolă incorectă.");
+      const data = await res.json().catch(() => ({}));
+      setLoginError(
+        typeof data.error === "string"
+          ? data.error
+          : "Utilizator sau parolă incorectă.",
+      );
       return;
     }
 
+    setUsername("");
     setPassword("");
     setAuthenticated(true);
   }
@@ -215,7 +222,22 @@ export default function AdminApp() {
 
         <form onSubmit={handleLogin} className="mt-10 space-y-4">
           <div>
-            <label htmlFor="admin-password" className="sr-only">
+            <label htmlFor="admin-username" className="mb-2 block text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+              Utilizator
+            </label>
+            <input
+              id="admin-username"
+              type="text"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="cristina.barbu"
+              className="w-full border border-border-strong bg-background px-4 py-3 text-foreground"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="admin-password" className="mb-2 block text-[0.65rem] uppercase tracking-[0.18em] text-muted">
               Parolă
             </label>
             <input

@@ -3,21 +3,33 @@ import {
   ADMIN_COOKIE,
   createSessionToken,
   isAdminAuthenticated,
+  isAdminAuthConfigured,
   sessionCookieOptions,
-  verifyAdminPassword,
+  verifyAdminCredentials,
 } from "@/lib/admin-auth";
 
 export async function GET() {
-  return NextResponse.json({ authenticated: await isAdminAuthenticated() });
+  return NextResponse.json({
+    authenticated: await isAdminAuthenticated(),
+    configured: isAdminAuthConfigured(),
+  });
 }
 
 export async function POST(request: NextRequest) {
+  if (!isAdminAuthConfigured()) {
+    return NextResponse.json(
+      { error: "Autentificarea nu este configurată pe server." },
+      { status: 503 },
+    );
+  }
+
   const body = await request.json();
+  const username = typeof body.username === "string" ? body.username : "";
   const password = typeof body.password === "string" ? body.password : "";
 
-  if (!verifyAdminPassword(password)) {
+  if (!verifyAdminCredentials(username, password)) {
     return NextResponse.json(
-      { error: "Parolă incorectă." },
+      { error: "Utilizator sau parolă incorectă." },
       { status: 401 },
     );
   }

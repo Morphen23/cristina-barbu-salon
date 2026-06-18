@@ -99,6 +99,12 @@ body {
   min-width: 0;
 }
 
+body.mobile-menu-open header,
+body.mobile-menu-open main,
+body.mobile-menu-open footer {
+  visibility: hidden;
+}
+
 input,
 select,
 textarea,
